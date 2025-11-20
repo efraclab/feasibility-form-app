@@ -1,17 +1,14 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   FlaskConical,
-  Calendar,
   FileText,
   ChevronRight,
   Loader2,
-  Package,
   Building2,
   Filter,
   RefreshCw,
   Plus,
-  TrendingUp,
   Clock,
   CheckCircle2,
   FileEdit,
@@ -54,7 +51,7 @@ interface Form {
     client_name: string;
     sample_name: string;
     sample_type: string;
-    status: 'draft' | 'published';
+    status: 'Draft' | 'Published';
     created_at: string;
     updated_at: string;
 }
@@ -162,14 +159,14 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   };
 
   const getStatusIcon = (status: string) => {
-    return status === 'published' ? CheckCircle2 : FileEdit;
+    return status === 'Published' ? CheckCircle2 : FileEdit;
   };
 
   // Calculate stats
   const stats = {
     total: forms.length,
-    draft: forms.filter(f => f.status === 'draft').length,
-    published: forms.filter(f => f.status === 'published').length,
+    draft: forms.filter(f => f.status === 'Draft').length,
+    published: forms.filter(f => f.status === 'Published').length,
   };
 
   return (
@@ -352,8 +349,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   <div className="space-y-2">
                     {[
                       { value: "all", label: "All Forms", count: stats.total },
-                      { value: "draft", label: "Draft", count: stats.draft },
-                      { value: "published", label: "Published", count: stats.published }
+                      { value: "Draft", label: "Draft", count: stats.draft },
+                      { value: "Published", label: "Published", count: stats.published }
                     ].map((status) => (
                       <button
                         key={status.value}
@@ -396,7 +393,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </div>
                   <div className="px-3 py-1 bg-emerald-50 rounded-full border border-emerald-200">
                     <span className="text-sm font-semibold text-emerald-700">
-                      {filteredForms.length} {filteredForms.length === 1 ? 'form' : 'forms'}
+                      {filteredForms.length} {filteredForms.length === 1 ? 'Form' : 'Forms'}
                     </span>
                   </div>
                 </div>

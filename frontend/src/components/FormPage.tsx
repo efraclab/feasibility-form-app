@@ -67,7 +67,7 @@ interface FormDetails extends FormData {
   client_name: string; // Added for easier dashboard listing
   sample_name: string; // Added for easier dashboard listing
   sample_type: string; // Added for easier dashboard listing
-  status: 'draft' | 'published';
+  status: 'Draft' | 'Published';
   created_at: string;
   updated_at: string;
 }
@@ -609,7 +609,7 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
           sampleData: savedForm.sampleData,
         });
         setReferenceNo(savedForm.ref_no);
-        setIsPublished(savedForm.status === 'published');
+        setIsPublished(savedForm.status === 'Published');
         setFormId(savedForm.id);
         setCreatedAt(savedForm.created_at);
       }
@@ -733,7 +733,7 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
       client_name: formData.clientDetails.clientName,
       sample_name: formData.sampleData.sampleName,
       sample_type: formData.sampleData.sampleType,
-      status: 'draft',
+      status: 'Draft',
       created_at: createdAt,
       updated_at: now,
     };
@@ -767,7 +767,7 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
       client_name: formData.clientDetails.clientName,
       sample_name: formData.sampleData.sampleName,
       sample_type: formData.sampleData.sampleType,
-      status: 'published',
+      status: 'Published',
       created_at: createdAt,
       updated_at: now,
     };
@@ -794,7 +794,7 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
         client_name: formData.clientDetails.clientName,
         sample_name: formData.sampleData.sampleName,
         sample_type: formData.sampleData.sampleType,
-        status: 'published', // Keep status
+        status: 'Published', // Keep status
         created_at: createdAt,
         updated_at: new Date().toISOString(), // Update timestamp
     };
@@ -837,7 +837,7 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
       client_name: newFormData.clientDetails.clientName,
       sample_name: newFormData.sampleData.sampleName,
       sample_type: newFormData.sampleData.sampleType,
-      status: 'published',
+      status: 'Published',
       created_at: createdAt,
       updated_at: new Date().toISOString(),
     };
