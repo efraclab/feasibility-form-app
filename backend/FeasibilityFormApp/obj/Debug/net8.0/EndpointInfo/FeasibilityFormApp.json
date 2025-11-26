@@ -1,0 +1,130 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "FeasibilityFormApp",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/feasibilities/clients": {
+      "get": {
+        "tags": [
+          "Feasibility"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/feasibilities/sample-types": {
+      "get": {
+        "tags": [
+          "Feasibility"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/feasibilities/regulations": {
+      "get": {
+        "tags": [
+          "Feasibility"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/feasibilities/methods": {
+      "get": {
+        "tags": [
+          "Feasibility"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/feasibilities/specifications": {
+      "get": {
+        "tags": [
+          "Feasibility"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/feasibilities/instruments": {
+      "get": {
+        "tags": [
+          "Feasibility"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/feasibilities/labs": {
+      "get": {
+        "tags": [
+          "Feasibility"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/feasibilities/chemicals": {
+      "get": {
+        "tags": [
+          "Feasibility"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/feasibilities/columns": {
+      "get": {
+        "tags": [
+          "Feasibility"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/feasibilities/standards": {
+      "get": {
+        "tags": [
+          "Feasibility"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": { }
+}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import {
   X,
   Plus,
@@ -18,7 +19,26 @@ import {
   Lock,
   Check,
   ArrowLeft,
+  XCircle,
+  Beaker,
+  TestTube,
+  Package,
 } from "lucide-react";
+
+import {
+  fetchClients,
+  fetchSampleTypes,
+  fetchRegulations,
+  fetchInstruments,
+  fetchLabs,
+  fetchMethods,
+  fetchSpecifications,
+  fetchChemicals,
+  fetchColumns,
+  fetchStandards,
+} from "../services/api";
+import { type ClientDetail } from "../models/ClientDetail";
+import { BiLock } from "react-icons/bi";
 
 interface FormPageProps {
   onBack: () => void;
@@ -34,6 +54,13 @@ interface ClientDetails {
   contactPersonPhone: string;
 }
 
+interface Requirements {
+  instruments: string[];
+  chemicals: string[];
+  standards: string[];
+  columns: string[];
+}
+
 interface Parameter {
   id: string;
   parameterName: string;
@@ -45,6 +72,8 @@ interface Parameter {
   lab: string;
   isFeasible: boolean;
   verifiedAt?: string;
+  remarks: string;
+  requirements?: Requirements;
 }
 
 interface SampleData {
@@ -58,29 +87,49 @@ interface FormData {
   sampleData: SampleData;
 }
 
-// --- NEW/UPDATED: Shared Static List Management ---
+// --- Shared Static List Management ---
 const MASTER_LIST_KEY = "allFormsMasterList";
 
 interface FormDetails extends FormData {
   id: string;
   ref_no: string;
-  client_name: string; // Added for easier dashboard listing
-  sample_name: string; // Added for easier dashboard listing
-  sample_type: string; // Added for easier dashboard listing
-  status: 'Draft' | 'Published';
+  client_name: string;
+  sample_name: string;
+  sample_type: string;
+  status: "Draft" | "Published";
   created_at: string;
   updated_at: string;
 }
 
+interface ClientUnitDetail {
+  address: string;
+  city: string;
+  pin: string;
+  gstNo: string;
+  contactPersonName: string;
+  contactPersonPhone: string;
+}
+
+type AggregatedClientData = {
+  [clientName: string]: ClientUnitDetail[];
+};
+
+interface UniqueContact {
+  name: string;
+  phone: string;
+}
+
+const initialClientDetails: ClientDetails = {
+  clientName: "",
+  address: "",
+  pinCode: "",
+  gstNo: "",
+  contactPersonName: "",
+  contactPersonPhone: "",
+};
+
 const initialFormData: FormData = {
-  clientDetails: {
-    clientName: "",
-    address: "",
-    pinCode: "",
-    gstNo: "",
-    contactPersonName: "",
-    contactPersonPhone: "",
-  },
+  clientDetails: initialClientDetails,
   sampleData: {
     sampleName: "",
     sampleType: "",
@@ -89,130 +138,96 @@ const initialFormData: FormData = {
 };
 
 function getAllForms(): FormDetails[] {
-    const listString = localStorage.getItem(MASTER_LIST_KEY);
-    return listString ? JSON.parse(listString) : [];
+  const listString = localStorage.getItem(MASTER_LIST_KEY);
+  return listString ? JSON.parse(listString) : [];
 }
 
 function getFormById(id: string): FormDetails | undefined {
-    const allForms = getAllForms();
-    return allForms.find(f => f.id === id);
+  const allForms = getAllForms();
+  return allForms.find((f) => f.id === id);
 }
 
 function saveForm(newForm: FormDetails): void {
-    const allForms = getAllForms();
-    const existingIndex = allForms.findIndex(f => f.id === newForm.id);
+  const allForms = getAllForms();
+  const existingIndex = allForms.findIndex((f) => f.id === newForm.id);
 
-    if (existingIndex > -1) {
-        // Update existing form
-        allForms[existingIndex] = newForm;
-    } else {
-        // Add new form
-        allForms.push(newForm);
-    }
+  if (existingIndex > -1) {
+    // Update existing form
+    allForms[existingIndex] = newForm;
+  } else {
+    // Add new form
+    allForms.push(newForm);
+  }
 
-    localStorage.setItem(MASTER_LIST_KEY, JSON.stringify(allForms));
+  localStorage.setItem(MASTER_LIST_KEY, JSON.stringify(allForms));
 }
 // --- END Shared Static List Management ---
 
+// --- Client Data Aggregation Function ---
+function aggregateClientData(rawClients: ClientDetail[]): AggregatedClientData {
+  const aggregated: AggregatedClientData = {};
 
-const mockClients = [
-  {
-    name: "Acme Pharmaceuticals Ltd.",
-    address: "123 Industrial Area, Sector 5",
-    pinCode: "110001",
-    gstNo: "07AAAAA0000A1Z5",
-  },
-  {
-    name: "BioTech Solutions Pvt Ltd",
-    address: "456 Tech Park, Phase 2",
-    pinCode: "560037",
-    gstNo: "29BBBBB1111B2Z6",
-  },
-  {
-    name: "Global Manufacturing Corp",
-    address: "789 Export Zone, Block A",
-    pinCode: "400001",
-    gstNo: "27CCCCC2222C3Z7",
-  },
-  {
-    name: "Zenith Chemicals Inc.",
-    address: "321 Science City, Tower B",
-    pinCode: "500032",
-    gstNo: "36DDDDD3333D4Z8",
-  },
-];
+  rawClients.forEach((client) => {
+    const name = client.clientName.trim();
+    if (!name) return;
 
-const mockContacts = [
-  {
-    clientName: "Acme Pharmaceuticals Ltd.",
-    name: "Dr. Rajesh Kumar",
-    phone: "+91 98765 43210",
-  },
-  {
-    clientName: "Acme Pharmaceuticals Ltd.",
-    name: "Ms. Priya Sharma",
-    phone: "+91 98765 43211",
-  },
-  {
-    clientName: "BioTech Solutions Pvt Ltd",
-    name: "Mr. Amit Patel",
-    phone: "+91 98765 43212",
-  },
-  {
-    clientName: "Global Manufacturing Corp",
-    name: "Dr. Sarah Johnson",
-    phone: "+91 98765 43213",
-  },
-  {
-    clientName: "Zenith Chemicals Inc.",
-    name: "Mr. Vikram Singh",
-    phone: "+91 98765 43214",
-  },
-];
+    const unitDetail: ClientUnitDetail = {
+      address: client.address || "",
+      city: client.city || "",
+      pin: client.pin || "",
+      gstNo: client.gstNo || "",
+      contactPersonName: client.contactPersonName || "",
+      contactPersonPhone: client.contactPersonPhone || "",
+    };
 
-const mockRegulations = [
-  "ISO 17025",
-  "FDA 21 CFR",
-  "ICH Q7",
-  "USP",
-  "EP",
-  "BP",
-  "ASTM",
-  "AOAC",
-];
-const mockMethods = [
-  "HPLC",
-  "GC-MS",
-  "UV-Vis",
-  "FTIR",
-  "Karl Fischer",
-  "Dissolution",
-  "ICP-MS",
-  "LC-MS/MS",
-];
-const mockInstruments = [
-  "Agilent 1260",
-  "Shimadzu GCMS-QP2020",
-  "Waters Alliance",
-  "Perkin Elmer FTIR",
-  "Thermo Fisher ICP-MS",
-];
-const mockLabs = [
-  "Analytical Lab 1",
-  "Analytical Lab 2",
-  "Microbiology Lab",
-  "Physical Testing Lab",
-  "Chromatography Lab",
-];
-const mockSampleTypes = [
-  "Raw Material",
-  "Finished Product",
-  "Intermediate",
-  "Stability Sample",
-  "R&D Sample",
-];
+    if (aggregated[name]) {
+      aggregated[name].push(unitDetail);
+    } else {
+      aggregated[name] = [unitDetail];
+    }
+  });
 
-// UPDATED: Added disabled prop to CustomDropdown
+  return aggregated;
+}
+
+function extractUniqueContacts(
+  aggregatedClients: AggregatedClientData
+): UniqueContact[] {
+  const contactsMap = new Map<string, UniqueContact>();
+
+  Object.values(aggregatedClients)
+    .flat()
+    .forEach((unit) => {
+      const { contactPersonName: name, contactPersonPhone: phone } = unit;
+
+      const trimmedName = name.trim();
+      const trimmedPhone = phone.trim();
+
+      if (!trimmedName || trimmedName === "-") {
+        return;
+      }
+
+      if (!contactsMap.has(trimmedName)) {
+        contactsMap.set(trimmedName, {
+          name: trimmedName,
+          phone: trimmedPhone,
+        });
+      } else {
+        const existingContact = contactsMap.get(trimmedName)!;
+        if (!existingContact.phone && trimmedPhone) {
+          contactsMap.set(trimmedName, {
+            name: trimmedName,
+            phone: trimmedPhone,
+          });
+        }
+      }
+    });
+
+  return Array.from(contactsMap.values()).sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+}
+
 const CustomDropdown: React.FC<{
   options: string[];
   value: string;
@@ -281,7 +296,7 @@ const CustomDropdown: React.FC<{
             ${
               disabled
                 ? "bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-white border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-400 hover:shadow-sm"
+                : "bg-white border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
             }`}
           placeholder={placeholder}
         />
@@ -302,7 +317,7 @@ const CustomDropdown: React.FC<{
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search..."
-                className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-emerald-200 rounded-md focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition-all duration-200"
+                className="w-full pl-9 pr-3 py-2 rounded-md text-sm bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all duration-200"
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
@@ -329,13 +344,282 @@ const CustomDropdown: React.FC<{
   );
 };
 
+// --- TOAST COMPONENT ---
+interface ToastProps {
+  message: string;
+  type: "success" | "error" | "info";
+  onClose: () => void;
+}
+
+const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
+  const [isVisible, setIsVisible] = useState(true);
+
+  const icon = {
+    success: <CheckCircle className="w-5 h-5 text-emerald-500" />,
+    error: <XCircle className="w-5 h-5 text-red-500" />,
+    info: <Sparkles className="w-5 h-5 text-indigo-500" />,
+  }[type];
+
+  const colorClasses = {
+    success: "border-emerald-500",
+    error: "border-red-500",
+    info: "border-indigo-500",
+  }[type];
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(false);
+      setTimeout(onClose, 300);
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div
+      className={`fixed top-6 right-6 z-[100] transition-transform duration-300 ease-out ${
+        isVisible ? "animate-toastIn" : "animate-toastOut"
+      }`}
+      onAnimationEnd={(e) => {
+        if (
+          e.animationName === "toastOut" ||
+          e.animationName === "animate-toastOut"
+        ) {
+          onClose();
+        }
+      }}
+    >
+      <div
+        className={`flex items-center w-full max-w-xs p-4 rounded-xl bg-white border-l-4 shadow-xl ${colorClasses}`}
+        role="alert"
+      >
+        {icon}
+        <div className="ml-3 text-sm font-medium text-gray-700">{message}</div>
+        <button
+          type="button"
+          className="ml-auto -mx-1.5 -my-1.5 text-gray-400 hover:text-gray-900 rounded-lg p-1.5 hover:bg-gray-100 inline-flex h-8 w-8 transition-colors"
+          onClick={() => setIsVisible(false)}
+          aria-label="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// REQUIREMENT SELECTOR COMPONENT (Using Existing Dropdown Style)
+// =============================================================================
+interface RequirementSelectorProps {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  options: string[];
+  selectedItems: string[];
+  onAdd: (item: string) => void;
+  onRemove: (item: string) => void;
+  placeholder: string;
+  isLoading: boolean;
+  disabled: boolean;
+  accentColor: string;
+}
+
+const RequirementSelector: React.FC<RequirementSelectorProps> = ({
+  label,
+  icon: Icon,
+  options,
+  selectedItems,
+  onAdd,
+  onRemove,
+  placeholder,
+  isLoading,
+  disabled,
+  accentColor,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+        setSearch("");
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOptions = options
+    .filter((opt) => opt.toLowerCase().includes(search.toLowerCase()))
+    .filter((opt) => !selectedItems.includes(opt));
+
+  const handleAdd = (item: string) => {
+    if (item.trim() && !selectedItems.includes(item.trim())) {
+      onAdd(item.trim());
+      setSearch("");
+      setIsOpen(false);
+    }
+  };
+
+  const showAddCustomOption =
+    search.trim() &&
+    !filteredOptions.some(
+      (opt) => opt.toLowerCase() === search.toLowerCase()
+    ) &&
+    !selectedItems.includes(search.trim());
+
+  return (
+    <div
+      ref={dropdownRef}
+      className={`bg-white rounded-xl border border-emerald-100 shadow-sm hover:shadow-md transition-shadow duration-300 ${
+        disabled ? "opacity-60 pointer-events-none" : ""
+      }`}
+    >
+      {/* Card Header */}
+      <div
+        className={`flex items-center gap-3 px-4 py-3 bg-gradient-to-r ${accentColor} border-b border-emerald-100 rounded-t-xl`}
+      >
+        <div className="p-1.5 bg-white/80 rounded-lg">
+          <Icon className="w-4 h-4 text-emerald-700" />
+        </div>
+        <span className="text-sm font-semibold text-emerald-900">{label}</span>
+        <span className="ml-auto text-xs font-medium text-emerald-700 bg-white/60 px-2 py-0.5 rounded-full">
+          {selectedItems.length} selected
+        </span>
+      </div>
+
+      {/* Card Body */}
+      <div className="p-4">
+        {/* Selected Items */}
+        <div className="flex flex-wrap gap-2 min-h-[32px] mb-3">
+          {selectedItems.length === 0 ? (
+            <span className="text-xs text-gray-400 italic">
+              No items selected
+            </span>
+          ) : (
+            selectedItems.map((item, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-800 text-[11px] font-medium rounded-md border border-emerald-200 group hover:bg-emerald-100 transition-colors"
+              >
+                <span className="truncate max-w-[120px]">{item}</span>
+                {!disabled && (
+                  <button
+                    onClick={() => onRemove(item)}
+                    className="p-0.5 hover:bg-emerald-200 rounded-full transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </span>
+            ))
+          )}
+        </div>
+
+        {/* Dropdown Input (Same style as CustomDropdown) */}
+        {!disabled && (
+          <div className="relative group">
+            <div className="relative">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onFocus={() => !isLoading && setIsOpen(true)}
+                disabled={isLoading}
+                className={`w-full px-4 py-2.5 text-sm border rounded-lg transition-all duration-300 placeholder-gray-400 
+                  ${
+                    isLoading
+                      ? "bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
+                  }`}
+                placeholder={isLoading ? "Loading..." : placeholder}
+              />
+              <ChevronDown
+                className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-all duration-300 pointer-events-none ${
+                  isOpen ? "rotate-180 text-emerald-500" : ""
+                }`}
+              />
+            </div>
+
+            {/* Dropdown Options */}
+            {isOpen &&
+              !isLoading &&
+              (filteredOptions.length > 0 || showAddCustomOption) && (
+                <div className="absolute z-50 w-full mt-2 bg-white border border-emerald-200 rounded-lg shadow-xl overflow animate-slideDown">
+                  <div className="p-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                      <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search..."
+                        className="w-full pl-9 pr-3 py-2 text-sm rounded-md bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                    {/* Add Custom Option */}
+                    {showAddCustomOption && (
+                      <div
+                        onClick={() => handleAdd(search)}
+                        className="px-4 py-2.5 text-sm cursor-pointer transition-all duration-200 text-emerald-600 font-medium hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 border-b border-gray-50 flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add "{search}"
+                      </div>
+                    )}
+
+                    {/* Existing Options */}
+                    {filteredOptions.map((option, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => handleAdd(option)}
+                        className="px-4 py-2.5 text-sm hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 cursor-pointer transition-all duration-200 text-gray-700 hover:text-emerald-700 border-b border-gray-50 last:border-0"
+                      >
+                        {option}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const ParameterDetail: React.FC<{
   parameter: Parameter;
   onUpdate: (param: Parameter) => void;
   onDelete: () => void;
   index: number;
   showFeasibilityCheck: boolean;
-  isFormPublished: boolean; // NEW PROP
+  isFormPublished: boolean;
+  onLock: (paramId: string) => void;
+  regulationOptions: string[];
+  isRegulationsLoading: boolean;
+  methodOptions: string[];
+  isMethodsLoading: boolean;
+  specificationOptions: string[];
+  isSpecificationsLoading: boolean;
+  instrumentOptions: string[];
+  isInstrumentsLoading: boolean;
+  labOptions: string[];
+  isLabsLoading: boolean;
+  chemicalOptions: string[];
+  isChemicalsLoading: boolean;
+  columnOptions: string[];
+  isColumnsLoading: boolean;
+  standardOptions: string[];
+  isStandardsLoading: boolean;
 }> = ({
   parameter,
   onUpdate,
@@ -343,217 +627,410 @@ const ParameterDetail: React.FC<{
   index,
   showFeasibilityCheck,
   isFormPublished,
+  onLock,
+  regulationOptions,
+  isRegulationsLoading,
+  methodOptions,
+  isMethodsLoading,
+  specificationOptions,
+  isSpecificationsLoading,
+  instrumentOptions,
+  isInstrumentsLoading,
+  labOptions,
+  isLabsLoading,
+  chemicalOptions,
+  isChemicalsLoading,
+  columnOptions,
+  isColumnsLoading,
+  standardOptions,
+  isStandardsLoading,
 }) => {
-  // Fully locked if verified by the final check
-  const isFinalLocked = parameter.isFeasible && parameter.verifiedAt;
-
-  // Row disabled if it is marked feasible OR fully locked
-  const isRowDisabled = parameter.isFeasible || !!isFinalLocked;
-
-  // Parameter Name is disabled if form is published OR row is disabled
+  const isFinalLocked = !!parameter.verifiedAt;
+  const isRowDisabled = isFinalLocked;
   const isNameDisabled = isFormPublished || isRowDisabled;
+  const isFeasibilitySet = typeof parameter.isFeasible === "boolean";
 
-  const handleFeasibilityToggle = async () => {
-    if (!isFinalLocked) {
-      onUpdate({ ...parameter, isFeasible: !parameter.isFeasible });
-    }
+  const requirements: Requirements = parameter.requirements || {
+    instruments: [],
+    chemicals: [],
+    standards: [],
+    columns: [],
+  };
+
+  const handleRequirementAdd = (category: keyof Requirements, item: string) => {
+    const updatedRequirements = {
+      ...requirements,
+      [category]: [...requirements[category], item],
+    };
+    onUpdate({ ...parameter, requirements: updatedRequirements });
+  };
+
+  const handleRequirementRemove = (
+    category: keyof Requirements,
+    item: string
+  ) => {
+    const updatedRequirements = {
+      ...requirements,
+      [category]: requirements[category].filter((i) => i !== item),
+    };
+    onUpdate({ ...parameter, requirements: updatedRequirements });
   };
 
   return (
     <div
-      className={`group p-6 rounded-xl border transition-all duration-300 animate-fadeIn relative
-      ${
-        parameter.isFeasible
-          ? "bg-emerald-50/40 border-emerald-200"
-          : "bg-gradient-to-br from-white to-emerald-50/30 border-gray-200 hover:border-emerald-300 hover:shadow-lg"
+      className={`rounded-2xl border-2 shadow-xl transition-all duration-500 ${
+        isFinalLocked
+          ? parameter.isFeasible
+            ? "border-emerald-300 bg-white"
+            : "border-red-300 bg-white"
+          : "border-emerald-200 bg-white hover:border-emerald-400 hover:shadow-2xl"
       }`}
     >
-      <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
-        <div
-          className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br rounded-full -mr-16 -mt-16 transition-transform duration-500
-          ${
-            parameter.isFeasible
-              ? "from-emerald-200/30 to-teal-200/30 scale-110"
-              : "from-emerald-100/20 to-teal-100/20 group-hover:scale-150"
-          }`}
-        ></div>
-      </div>
-
-      <div className="flex justify-between items-center mb-5 relative z-10">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-sm font-bold shadow-sm">
-            {index + 1}
-          </div>
-          <h4 className="text-sm font-semibold text-gray-800">
-            Test Parameter
-          </h4>
-          {/* Show Verified Badge only if fully locked by final submission */}
-          {isFinalLocked && (
-            <div className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold">
-              <Lock className="w-3 h-3" />
-              Verified
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {showFeasibilityCheck && (
-            <button
-              onClick={handleFeasibilityToggle}
-              disabled={!!isFinalLocked}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 shadow-sm hover:shadow-md
-                ${
-                  parameter.isFeasible
-                    ? "bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-200"
-                    : "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 transform hover:scale-102"
-                } ${!!isFinalLocked ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              {parameter.isFeasible ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  Feasible
-                </>
-              ) : (
-                <>
-                  <Shield className="w-3.5 h-3.5" />
-                  Make Feasible
-                </>
-              )}
-            </button>
-          )}
-          {!isFormPublished && (
-            <button
-              onClick={onDelete}
-              disabled={isRowDisabled} // Disable delete if marked feasible
-              className={`text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all duration-200 ${
-                isRowDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:scale-110"
-              }`}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      </div>
-
+      {/* Header */}
       <div
-        className={`grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10 ${
-          isRowDisabled ? "opacity-75" : ""
+        className={`px-4 py-3 rounded-t-2xl border-b-2 ${
+          isFinalLocked
+            ? parameter.isFeasible
+              ? "bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 border-emerald-300"
+              : "bg-gradient-to-r from-red-500 to-rose-500 border-red-300"
+            : "bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 border-emerald-200"
         }`}
       >
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-            Parameter Name
-          </label>
-          <input
-            value={parameter.parameterName}
-            disabled={isNameDisabled} // Disabled if published OR row locked
-            onChange={(e) =>
-              onUpdate({ ...parameter, parameterName: e.target.value })
-            }
-            className={`w-full px-4 py-2.5 text-sm border rounded-lg transition-all duration-300 placeholder-gray-400
-              ${
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm text-white text-lg font-bold shadow-inner">
+              {index + 1}
+            </div>
+            <div>
+              <h4 className="text-md font-bold text-white">Test Parameter</h4>
+              <p className="text-emerald-100 text-xs">
+                Configure test specifications
+              </p>
+            </div>
+
+            {isFinalLocked && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/20 text-white">
+                <Lock className="w-3 h-4" />
+                {parameter.isFeasible
+                  ? "Feasible (Locked)"
+                  : "Not Feasible (Locked)"}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            {showFeasibilityCheck && !isFinalLocked && (
+              <>
+                {/* Feasibility Toggle - Compact & Classic */}
+                <div className="flex rounded-lg overflow-hidden border border-white/40 shadow">
+                  <button
+                    onClick={() => onUpdate({ ...parameter, isFeasible: true })}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold transition-all duration-200 ${
+                      parameter.isFeasible === true
+                        ? "bg-white text-emerald-600"
+                        : "bg-white/10 text-white/90 hover:bg-white/20"
+                    }`}
+                  >
+                    <Check className="w-3 h-3" />
+                    Feasible
+                  </button>
+                  <button
+                    onClick={() =>
+                      onUpdate({ ...parameter, isFeasible: false })
+                    }
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold transition-all duration-200 border-l border-white/30 ${
+                      parameter.isFeasible === false
+                        ? "bg-white text-red-600"
+                        : "bg-white/10 text-white/90 hover:bg-white/20"
+                    }`}
+                  >
+                    <XCircle className="w-3 h-3" />
+                    Not Feasible
+                  </button>
+                </div>
+
+                {/* Lock Button - Compact & Classic */}
+                {isFeasibilitySet && (
+                  <button
+                    onClick={() => onLock(parameter.id)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/95 text-emerald-700 text-xs rounded-lg hover:bg-white transition-all duration-200 shadow font-semibold"
+                  >
+                    <Shield className="w-3 h-3" />
+                    Lock
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* Delete Button */}
+            {!isFormPublished && (
+              <motion.button
+                onClick={onDelete}
+                whileHover={{ scale: 1.1, rotate: 6 }}
+                whileTap={{ scale: 0.9 }}
+                disabled={isRowDisabled}
+                className={`p-2.5 bg-white/10 text-white rounded-xl transition-all duration-300 ${
+                  isRowDisabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                <Trash2 className="w-4 h-4 text-white" />
+              </motion.button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Form Fields */}
+      <div className={`p-6 ${isFinalLocked ? "opacity-80" : ""}`}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Parameter Name */}
+          <div className="group">
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              Parameter Name
+            </label>
+            <input
+              value={parameter.parameterName}
+              disabled={isNameDisabled}
+              onChange={(e) =>
+                onUpdate({ ...parameter, parameterName: e.target.value })
+              }
+              className={`w-full px-4 py-2.5 text-sm border rounded-lg duration-300 placeholder-gray-400 transition-all ${
                 isNameDisabled
                   ? "bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-white border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-400"
+                  : "border-gray-200 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
               }`}
-            placeholder="Enter parameter name..."
-          />
-        </div>
+              placeholder="Enter parameter name..."
+            />
+          </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-            Regulation
-          </label>
-          <CustomDropdown
-            options={mockRegulations}
-            value={parameter.regulation}
-            onChange={(val) => onUpdate({ ...parameter, regulation: val })}
-            placeholder="Select or type..."
-            disabled={isRowDisabled} // Disabled if row locked
-          />
-        </div>
+          {/* Regulation */}
+          <div className="group">
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              Regulation
+            </label>
+            <CustomDropdown
+              options={regulationOptions}
+              value={parameter.regulation}
+              onChange={(val) => onUpdate({ ...parameter, regulation: val })}
+              placeholder={
+                isRegulationsLoading ? "Loading..." : "Select or type..."
+              }
+              disabled={isRowDisabled || isRegulationsLoading}
+            />
+          </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-            Method
-          </label>
-          <CustomDropdown
-            options={mockMethods}
-            value={parameter.method}
-            onChange={(val) => onUpdate({ ...parameter, method: val })}
-            placeholder="Select or type..."
-            disabled={isRowDisabled}
-          />
-        </div>
+          {/* Method */}
+          <div className="group">
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              Method
+            </label>
+            <CustomDropdown
+              options={methodOptions}
+              value={parameter.method}
+              onChange={(val) => onUpdate({ ...parameter, method: val })}
+              placeholder={
+                isMethodsLoading ? "Loading..." : "Select or type..."
+              }
+              disabled={isRowDisabled || isMethodsLoading}
+            />
+          </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-            Specification
-          </label>
-          <input
-            value={parameter.specification}
-            disabled={isRowDisabled}
-            onChange={(e) =>
-              onUpdate({ ...parameter, specification: e.target.value })
-            }
-            className={`w-full px-4 py-2.5 text-sm border rounded-lg transition-all duration-300 placeholder-gray-400
-              ${
-                isRowDisabled
-                  ? "bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-white border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-400"
+          {/* Specification */}
+          <div className="group">
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              Specification
+            </label>
+            <CustomDropdown
+              options={specificationOptions}
+              value={parameter.specification}
+              onChange={(val) => onUpdate({ ...parameter, specification: val })}
+              placeholder={
+                isSpecificationsLoading ? "Loading..." : "Select or type..."
+              }
+              disabled={isRowDisabled || isSpecificationsLoading}
+            />
+          </div>
+
+          {/* Instrument */}
+          <div className="group">
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              Instrument
+            </label>
+            <CustomDropdown
+              options={instrumentOptions}
+              value={parameter.instrument}
+              onChange={(val) => onUpdate({ ...parameter, instrument: val })}
+              placeholder={
+                isInstrumentsLoading ? "Loading..." : "Select or type..."
+              }
+              disabled={isRowDisabled || isInstrumentsLoading}
+            />
+          </div>
+
+          {/* Lab */}
+          <div className="group">
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              Lab
+            </label>
+            <CustomDropdown
+              options={labOptions}
+              value={parameter.lab}
+              onChange={(val) => onUpdate({ ...parameter, lab: val })}
+              placeholder={isLabsLoading ? "Loading..." : "Select or type..."}
+              disabled={isRowDisabled || isLabsLoading}
+            />
+          </div>
+
+          {/* NABL Checkbox */}
+          <div className="flex items-end">
+            <label
+              className={`flex items-center gap-3 cursor-pointer group ${
+                isRowDisabled ? "cursor-not-allowed opacity-60" : ""
               }`}
-            placeholder="Enter specification..."
-          />
-        </div>
+            >
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={parameter.isNABL}
+                  disabled={isRowDisabled}
+                  onChange={(e) =>
+                    onUpdate({ ...parameter, isNABL: e.target.checked })
+                  }
+                  className="sr-only"
+                />
+                <div
+                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                    parameter.isNABL
+                      ? "bg-emerald-500 border-emerald-500"
+                      : "border-gray-300 group-hover:border-emerald-400"
+                  }`}
+                >
+                  {parameter.isNABL && <Check className="w-4 h-4 text-white" />}
+                </div>
+              </div>
+              <span className="text-sm font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors">
+                NABL Accredited
+              </span>
+            </label>
+          </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-            Instrument
-          </label>
-          <CustomDropdown
-            options={mockInstruments}
-            value={parameter.instrument}
-            onChange={(val) => onUpdate({ ...parameter, instrument: val })}
-            placeholder="Select or type..."
-            disabled={isRowDisabled}
-          />
-        </div>
+          {isFormPublished && (
+            <>
+              {/* Requirements Section */}
+              <div className="md:col-span-2">
+                <div className={`${isFinalLocked ? "opacity-80" : ""}`}>
+                  <div className="border-t-2 border-emerald-100 pt-6">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-lg">
+                        <Package className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h5 className="block text-sm font-bold text-gray-600 uppercase tracking-wider">
+                          Test Requirements
+                        </h5>
+                        <p className="text-[11px] text-gray-500">
+                          Configure required resources for this test
+                        </p>
+                      </div>
+                    </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-            Lab
-          </label>
-          <CustomDropdown
-            options={mockLabs}
-            value={parameter.lab}
-            onChange={(val) => onUpdate({ ...parameter, lab: val })}
-            placeholder="Select or type..."
-            disabled={isRowDisabled}
-          />
-        </div>
+                    <div className="grid grid-cols-1 gap-4">
+                      {/* Instruments */}
+                      <RequirementSelector
+                        label="Instruments"
+                        icon={TestTube}
+                        options={instrumentOptions}
+                        selectedItems={requirements.instruments}
+                        onAdd={(item) =>
+                          handleRequirementAdd("instruments", item)
+                        }
+                        onRemove={(item) =>
+                          handleRequirementRemove("instruments", item)
+                        }
+                        placeholder="Add instrument..."
+                        isLoading={isInstrumentsLoading}
+                        disabled={isRowDisabled}
+                        accentColor="from-emerald-50 to-teal-50"
+                      />
 
-        <div className="flex items-end">
-          <label
-            className={`flex items-center gap-2.5 group/checkbox ${
-              isRowDisabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
-            }`}
-          >
-            <div className="relative">
-              <input
-                type="checkbox"
-                checked={parameter.isNABL}
-                disabled={isRowDisabled}
-                onChange={(e) =>
-                  onUpdate({ ...parameter, isNABL: e.target.checked })
-                }
-                className="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 cursor-pointer transition-all duration-200 disabled:cursor-not-allowed"
-              />
-            </div>
-            <span className="text-sm font-medium text-gray-700 group-hover/checkbox:text-emerald-600 transition-colors duration-200">
-              NABL Accredited
-            </span>
-          </label>
+                      {/* Chemicals */}
+                      <RequirementSelector
+                        label="Chemicals"
+                        icon={Beaker}
+                        options={chemicalOptions}
+                        selectedItems={requirements.chemicals}
+                        onAdd={(item) =>
+                          handleRequirementAdd("chemicals", item)
+                        }
+                        onRemove={(item) =>
+                          handleRequirementRemove("chemicals", item)
+                        }
+                        placeholder="Add chemical..."
+                        isLoading={isChemicalsLoading}
+                        disabled={isRowDisabled}
+                        accentColor="from-teal-50 to-cyan-50"
+                      />
+
+                      {/* Standards */}
+                      <RequirementSelector
+                        label="Standards"
+                        icon={FlaskConical}
+                        options={standardOptions}
+                        selectedItems={requirements.standards}
+                        onAdd={(item) =>
+                          handleRequirementAdd("standards", item)
+                        }
+                        onRemove={(item) =>
+                          handleRequirementRemove("standards", item)
+                        }
+                        placeholder="Add standard..."
+                        isLoading={isStandardsLoading}
+                        disabled={isRowDisabled}
+                        accentColor="from-emerald-50 to-green-50"
+                      />
+
+                      {/* Columns */}
+                      <RequirementSelector
+                        label="Columns"
+                        icon={Settings}
+                        options={columnOptions}
+                        selectedItems={requirements.columns}
+                        onAdd={(item) => handleRequirementAdd("columns", item)}
+                        onRemove={(item) =>
+                          handleRequirementRemove("columns", item)
+                        }
+                        placeholder="Add column..."
+                        isLoading={isColumnsLoading}
+                        disabled={isRowDisabled}
+                        accentColor="from-cyan-50 to-sky-50"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Remarks */}
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  Remarks
+                </label>
+                <textarea
+                  value={parameter.remarks}
+                  disabled={isRowDisabled}
+                  onChange={(e) =>
+                    onUpdate({ ...parameter, remarks: e.target.value })
+                  }
+                  rows={3}
+                  className={`w-full px-4 py-3 text-sm border-2 rounded-xl transition-all resize-none ${
+                    isRowDisabled
+                      ? "bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed"
+                      : "border-gray-200 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                  }`}
+                  placeholder="Add any specific instructions or remarks..."
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -592,13 +1069,149 @@ const ReferenceNumberBanner: React.FC<{
 
 export default function FormPage({ onBack, _formId }: FormPageProps) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [showToast, setShowToast] = useState(false);
+  const [showPublishBanner, setShowPublishBanner] = useState(false);
   const [referenceNo, setReferenceNo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
   const [formId, setFormId] = useState<string | undefined>(_formId);
   const [createdAt, setCreatedAt] = useState(new Date().toISOString());
+
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
+
+  const showNotification = (
+    message: string,
+    type: "success" | "error" | "info" = "success"
+  ) => {
+    setToast({ message, type });
+  };
+
+  const closeNotification = () => {
+    setToast(null);
+  };
+
+  const [masterClientData, setMasterClientData] =
+    useState<AggregatedClientData>({});
+  const [isClientDataLoading, setIsClientDataLoading] = useState(true);
+  const [uniqueContacts, setUniqueContacts] = useState<UniqueContact[]>([]);
+
+  const [regulationOptions, setRegulationOptions] = useState<string[]>([]);
+  const [isRegulationsLoading, setIsRegulationsLoading] = useState(true);
+  const [sampleTypeOptions, setSampleTypeOptions] = useState<string[]>([]);
+  const [isSampleTypesLoading, setIsSampleTypesLoading] = useState(true);
+  const [methodOptions, setMethodOptions] = useState<string[]>([]);
+  const [isMethodsLoading, setIsMethodsLoading] = useState(true);
+  const [specificationOptions, setSpecificationOptions] = useState<string[]>(
+    []
+  );
+  const [isSpecificationsLoading, setIsSpecificationsLoading] = useState(true);
+  const [instrumentOptions, setInstrumentOptions] = useState<string[]>([]);
+  const [isInstrumentsLoading, setIsInstrumentsLoading] = useState(true);
+  const [labOptions, setLabOptions] = useState<string[]>([]);
+  const [isLabsLoading, setIsLabsLoading] = useState(true);
+
+  // NEW: Requirements options states
+  const [chemicalOptions, setChemicalOptions] = useState<string[]>([]);
+  const [isChemicalsLoading, setIsChemicalsLoading] = useState(true);
+  const [columnOptions, setColumnOptions] = useState<string[]>([]);
+  const [isColumnsLoading, setIsColumnsLoading] = useState(true);
+  const [standardOptions, setStandardOptions] = useState<string[]>([]);
+  const [isStandardsLoading, setIsStandardsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadClientData = async () => {
+      setIsClientDataLoading(true);
+      try {
+        const rawClients = await fetchClients();
+        const aggregated = aggregateClientData(rawClients);
+        setMasterClientData(aggregated);
+
+        const extractedContacts = extractUniqueContacts(aggregated);
+        setUniqueContacts(extractedContacts);
+      } catch (error) {
+        console.error("Error fetching client data:", error);
+        showNotification("Failed to load client data.", "error");
+      } finally {
+        setIsClientDataLoading(false);
+      }
+    };
+    loadClientData();
+  }, []);
+
+  useEffect(() => {
+    const loadLookupData = async () => {
+      setIsSampleTypesLoading(true);
+      setIsMethodsLoading(true);
+      setIsSpecificationsLoading(true);
+      setIsInstrumentsLoading(true);
+      setIsLabsLoading(true);
+      setIsRegulationsLoading(true);
+      setIsChemicalsLoading(true);
+      setIsColumnsLoading(true);
+      setIsStandardsLoading(true);
+
+      try {
+        const [
+          types,
+          methods,
+          specs,
+          instruments,
+          labs,
+          regulations,
+          chemicals,
+          columns,
+          standards,
+        ] = await Promise.all([
+          fetchSampleTypes(),
+          fetchMethods(),
+          fetchSpecifications(),
+          fetchInstruments(),
+          fetchLabs(),
+          fetchRegulations(),
+          fetchChemicals(),
+          fetchColumns(),
+          fetchStandards(),
+        ]);
+
+        setSampleTypeOptions(types);
+        setMethodOptions(methods);
+        setSpecificationOptions(specs);
+        setInstrumentOptions(instruments);
+        setLabOptions(labs);
+        setRegulationOptions(regulations);
+        setChemicalOptions(chemicals);
+        setColumnOptions(columns);
+        setStandardOptions(standards);
+      } catch (error) {
+        console.error("Error fetching lookup data:", error);
+        showNotification("Failed to load lookup data.", "error");
+
+        setSampleTypeOptions([]);
+        setMethodOptions([]);
+        setSpecificationOptions([]);
+        setInstrumentOptions([]);
+        setLabOptions([]);
+        setRegulationOptions([]);
+        setChemicalOptions([]);
+        setColumnOptions([]);
+        setStandardOptions([]);
+      } finally {
+        setIsSampleTypesLoading(false);
+        setIsMethodsLoading(false);
+        setIsSpecificationsLoading(false);
+        setIsInstrumentsLoading(false);
+        setIsLabsLoading(false);
+        setIsRegulationsLoading(false);
+        setIsChemicalsLoading(false);
+        setIsColumnsLoading(false);
+        setIsStandardsLoading(false);
+      }
+    };
+    loadLookupData();
+  }, []);
 
   useEffect(() => {
     if (_formId) {
@@ -609,13 +1222,11 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
           sampleData: savedForm.sampleData,
         });
         setReferenceNo(savedForm.ref_no);
-        setIsPublished(savedForm.status === 'Published');
+        setIsPublished(savedForm.status === "Published");
         setFormId(savedForm.id);
         setCreatedAt(savedForm.created_at);
       }
     } else {
-      // New form logic: keep it empty or load from a temporary key if needed, 
-      // but for simplicity, starting clean on no ID
       setFormData(initialFormData);
       setReferenceNo("");
       setIsPublished(false);
@@ -625,23 +1236,35 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
   }, [_formId]);
 
   const handleClientSelect = (clientName: string) => {
-    const client = mockClients.find((c) => c.name === clientName);
-    if (client) {
+    const units = masterClientData[clientName] || [];
+    let selectedUnit: ClientUnitDetail | undefined;
+
+    if (units.length > 0) {
+      selectedUnit = units[0];
+    }
+
+    if (selectedUnit) {
+      const fullAddress = [selectedUnit.address, selectedUnit.city]
+        .filter(Boolean)
+        .join(", ");
+
       setFormData((prev) => ({
         ...prev,
         clientDetails: {
           ...prev.clientDetails,
-          clientName: client.name,
-          address: client.address,
-          pinCode: client.pinCode,
-          gstNo: client.gstNo,
+          clientName: clientName,
+          address: fullAddress,
+          pinCode: selectedUnit.pin,
+          gstNo: selectedUnit.gstNo,
+          contactPersonName: selectedUnit.contactPersonName,
+          contactPersonPhone: selectedUnit.contactPersonPhone,
         },
       }));
     } else {
       setFormData((prev) => ({
         ...prev,
         clientDetails: {
-          ...prev.clientDetails,
+          ...initialClientDetails,
           clientName: clientName,
         },
       }));
@@ -649,18 +1272,15 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
   };
 
   const handleContactSelect = (contactName: string) => {
-    const contact = mockContacts.find(
-      (c) =>
-        c.name === contactName &&
-        c.clientName === formData.clientDetails.clientName
-    );
-    if (contact) {
+    const selectedContact = uniqueContacts.find((c) => c.name === contactName);
+
+    if (selectedContact) {
       setFormData((prev) => ({
         ...prev,
         clientDetails: {
           ...prev.clientDetails,
-          contactPersonName: contact.name,
-          contactPersonPhone: contact.phone,
+          contactPersonName: selectedContact.name,
+          contactPersonPhone: selectedContact.phone,
         },
       }));
     } else {
@@ -669,6 +1289,7 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
         clientDetails: {
           ...prev.clientDetails,
           contactPersonName: contactName,
+          contactPersonPhone: "",
         },
       }));
     }
@@ -685,6 +1306,13 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
       isNABL: false,
       lab: "",
       isFeasible: false,
+      remarks: "",
+      requirements: {
+        instruments: [],
+        chemicals: [],
+        standards: [],
+        columns: [],
+      },
     };
     setFormData((prev) => ({
       ...prev,
@@ -717,101 +1345,49 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
     }));
   };
 
-  const handleSaveDraft = async () => {
-    setIsSaving(true);
-    // Simulate API/DB saving time
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    const currentFormId = formId || Date.now().toString();
-    const currentReferenceNo = referenceNo || `DRAFT-${currentFormId.substring(4)}`;
-    const now = new Date().toISOString();
-
-    const formToSave: FormDetails = {
-      ...formData,
-      id: currentFormId,
-      ref_no: currentReferenceNo,
-      client_name: formData.clientDetails.clientName,
-      sample_name: formData.sampleData.sampleName,
-      sample_type: formData.sampleData.sampleType,
-      status: 'Draft',
-      created_at: createdAt,
-      updated_at: now,
-    };
-
-    saveForm(formToSave); // Save to the master list
-    
-    setFormId(currentFormId);
-    setReferenceNo(currentReferenceNo);
-    setIsSaving(false)
-    setIsPublished(false);
-    setIsSubmitting(false);
-    
-    // Minor visual feedback for save
-    alert(`Draft saved successfully! Ref: ${currentReferenceNo}`);
-  };
-
-  const handlePublish = async () => {
+  const handleSavePublished = async () => {
     setIsSubmitting(true);
-    // Simulate API/DB publishing time
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    const currentFormId = formId || Date.now().toString();
-    // Generate a proper REF_NO only on publish if it wasn't there (new form)
-    const currentReferenceNo = `REF-${currentFormId.slice(-4)}-${new Date().getFullYear()}`;
-    const now = new Date().toISOString();
-
-    const formToSave: FormDetails = {
-      ...formData,
-      id: currentFormId,
-      ref_no: currentReferenceNo,
-      client_name: formData.clientDetails.clientName,
-      sample_name: formData.sampleData.sampleName,
-      sample_type: formData.sampleData.sampleType,
-      status: 'Published',
-      created_at: createdAt,
-      updated_at: now,
-    };
-
-    saveForm(formToSave); // Save to the master list
-
-    setFormId(currentFormId);
-    setReferenceNo(currentReferenceNo);
-    setIsPublished(true);
-    setIsSubmitting(false);
-    setShowToast(true);
-  };
-  
-  // NEW FUNCTION: Handle updating a published form (e.g., parameter changes)
-  const handleUpdatePublished = async () => {
-    setIsSubmitting(true);
-    // Simulate API/DB saving time
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     const formToSave: FormDetails = {
-        ...formData,
-        id: formId!, // Must exist for an update
-        ref_no: referenceNo,
-        client_name: formData.clientDetails.clientName,
-        sample_name: formData.sampleData.sampleName,
-        sample_type: formData.sampleData.sampleType,
-        status: 'Published', // Keep status
-        created_at: createdAt,
-        updated_at: new Date().toISOString(), // Update timestamp
+      ...formData,
+      id: formId!,
+      ref_no: referenceNo,
+      client_name: formData.clientDetails.clientName,
+      sample_name: formData.sampleData.sampleName,
+      sample_type: formData.sampleData.sampleType,
+      status: "Published",
+      created_at: createdAt,
+      updated_at: new Date().toISOString(),
     };
 
     saveForm(formToSave);
     setIsSubmitting(false);
-    alert(`Published Form ${referenceNo} updated successfully!`);
+
+    if (!toast) {
+      showNotification(`Changes for ${referenceNo} saved successfully!`);
+    }
   };
 
-  const handleVerifyFeasibility = async () => {
-    setIsSubmitting(true);
-    // Simulate API/DB verification time
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+  const handleLockParameter = (paramId: string) => {
+    if (!isPublished) {
+      showNotification(
+        "Form must be published before locking parameters.",
+        "info"
+      );
+      return;
+    }
 
-    // Simulate locking/verification: mark all feasible parameters as verified
+    const parameterToLock = formData.sampleData.parameters.find(
+      (p) => p.id === paramId
+    );
+    if (!parameterToLock || typeof parameterToLock.isFeasible !== "boolean") {
+      showNotification("Please set feasibility before locking.", "info");
+      return;
+    }
+
     const updatedParameters = formData.sampleData.parameters.map((p) => {
-      if (p.isFeasible && !p.verifiedAt) {
+      if (p.id === paramId) {
         return {
           ...p,
           verifiedAt: new Date().toISOString(),
@@ -820,31 +1396,81 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
       return p;
     });
 
-    const newFormData: FormData = {
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       sampleData: {
-        ...formData.sampleData,
+        ...prev.sampleData,
         parameters: updatedParameters,
       },
-    };
-    setFormData(newFormData);
+    }));
 
-    // Resave the updated state to the master list
+    showNotification(
+      `Parameter ${parameterToLock.parameterName} is locked. Saved to locked permanently.`
+    );
+    handleSavePublished();
+  };
+
+  const handleSaveDraft = async () => {
+    setIsSaving(true);
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    const currentFormId = formId || Date.now().toString();
+    const currentReferenceNo =
+      referenceNo || `DRAFT-${currentFormId.substring(4)}`;
+    const now = new Date().toISOString();
+
     const formToSave: FormDetails = {
-      ...newFormData,
-      id: formId!, // Must have an ID if it's published
-      ref_no: referenceNo,
-      client_name: newFormData.clientDetails.clientName,
-      sample_name: newFormData.sampleData.sampleName,
-      sample_type: newFormData.sampleData.sampleType,
-      status: 'Published',
+      ...formData,
+      id: currentFormId,
+      ref_no: currentReferenceNo,
+      client_name: formData.clientDetails.clientName,
+      sample_name: formData.sampleData.sampleName,
+      sample_type: formData.sampleData.sampleType,
+      status: "Draft",
       created_at: createdAt,
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     };
-    saveForm(formToSave); // Update the master list
 
+    saveForm(formToSave);
+
+    setFormId(currentFormId);
+    setReferenceNo(currentReferenceNo);
+    setIsSaving(false);
+    setIsPublished(false);
     setIsSubmitting(false);
-    alert("Verified Parameters have been locked successfully!");
+
+    showNotification(`Draft saved successfully! Ref: ${currentReferenceNo}`);
+  };
+
+  const handlePublish = async () => {
+    setIsSubmitting(true);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    const currentFormId = formId || Date.now().toString();
+    const currentReferenceNo = `REF-${currentFormId.slice(
+      -4
+    )}-${new Date().getFullYear()}`;
+    const now = new Date().toISOString();
+
+    const formToSave: FormDetails = {
+      ...formData,
+      id: currentFormId,
+      ref_no: currentReferenceNo,
+      client_name: formData.clientDetails.clientName,
+      sample_name: formData.sampleData.sampleName,
+      sample_type: formData.sampleData.sampleType,
+      status: "Published",
+      created_at: createdAt,
+      updated_at: now,
+    };
+
+    saveForm(formToSave);
+
+    setFormId(currentFormId);
+    setReferenceNo(currentReferenceNo);
+    setIsPublished(true);
+    setIsSubmitting(false);
+    setShowPublishBanner(true);
   };
 
   const isFormValid =
@@ -852,18 +1478,7 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
     formData.sampleData.sampleName.trim() !== "" &&
     formData.sampleData.parameters.length > 0;
 
-  // NEW DERIVED STATE: Checks if there are any feasible parameters that haven't been verified yet
-  const hasUnverifiedFeasibleParameters = formData.sampleData.parameters.some(
-      (p) => p.isFeasible && !p.verifiedAt
-  );
-
-  const filteredContacts = mockContacts.filter(
-    (c) => c.clientName === formData.clientDetails.clientName
-  );
-  const contactOptions = [
-    ...new Set(filteredContacts.map((c) => c.name)),
-  ] as string[];
-
+  const clientNameOptions = Object.keys(masterClientData);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-teal-50/20 py-12 px-6">
@@ -880,18 +1495,34 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes shimmer {
-          0% { background-position: -1000px 0; }
-          100% { background-position: 1000px 0; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
         }
         .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
         .animate-slideDown { animation: slideDown 0.25s ease-out; }
         .animate-slideUp { animation: slideUp 0.35s ease-out; }
+        .animate-toastIn { animation: toastIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        .animate-toastOut { animation: toastOut 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #10b981, #14b8a6); border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: linear-gradient(to bottom, #059669, #0d9488); }
       `}</style>
+
+      {/* RENDER THE NEW TOAST COMPONENT */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={closeNotification}
+        />
+      )}
+      {/* END TOAST RENDER */}
 
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100">
@@ -916,7 +1547,6 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                      {/* Dynamic Title based on _formId prop */}
                       {_formId ? "Edit Sample Form" : "New Sample Registration"}
                     </h1>
                     <p className="text-emerald-100 text-sm mt-0.5">
@@ -955,95 +1585,35 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
                   </div>
                 )}
               </div>
+
+              {isClientDataLoading && (
+                <div className="flex items-center gap-2 text-sm text-emerald-600 mb-6">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading client data...
+                </div>
+              )}
+
               <div
                 className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${
                   isPublished ? "opacity-70 pointer-events-none" : ""
                 }`}
               >
+                {/* 1. Client Name Dropdown (Column 1, Row 1) */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5">
                     Client Name
                   </label>
                   <CustomDropdown
-                    options={mockClients.map((c) => c.name)}
+                    options={clientNameOptions}
                     value={formData.clientDetails.clientName}
                     onChange={handleClientSelect}
                     placeholder="Select or type client name..."
                     allowCustom={true}
+                    disabled={isClientDataLoading}
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                    Contact Person
-                  </label>
-                  <CustomDropdown
-                    options={contactOptions}
-                    value={formData.clientDetails.contactPersonName}
-                    onChange={handleContactSelect}
-                    placeholder="Select or type contact person..."
-                    allowCustom={true}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                    Address
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.clientDetails.address}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        clientDetails: {
-                          ...prev.clientDetails,
-                          address: e.target.value,
-                        },
-                      }))
-                    }
-                    className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-300 placeholder-gray-400"
-                    placeholder="Enter address..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                    Contact Phone
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.clientDetails.contactPersonPhone}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        clientDetails: {
-                          ...prev.clientDetails,
-                          contactPersonPhone: e.target.value,
-                        },
-                      }))
-                    }
-                    className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-300 placeholder-gray-400"
-                    placeholder="Enter phone number..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                    Pin Code
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.clientDetails.pinCode}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        clientDetails: {
-                          ...prev.clientDetails,
-                          pinCode: e.target.value,
-                        },
-                      }))
-                    }
-                    className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-300 placeholder-gray-400"
-                    placeholder="Enter pin code..."
-                  />
-                </div>
+
+                {/* 2. GST No. (Column 2, Row 1) */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5">
                     GST No.
@@ -1060,8 +1630,89 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
                         },
                       }))
                     }
-                    className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-300 placeholder-gray-400"
+                    className="w-full px-4 py-2.5 text-sm border rounded-lg transition-all duration-300 placeholder-gray-400 bg-white border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
                     placeholder="Enter GST number..."
+                  />
+                </div>
+
+                {/* 3. Address and City (Column 1, Row 2) */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                    Address and City
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.clientDetails.address}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        clientDetails: {
+                          ...prev.clientDetails,
+                          address: e.target.value,
+                        },
+                      }))
+                    }
+                    className="w-full px-4 py-2.5 text-sm border rounded-lg transition-all duration-300 placeholder-gray-400 bg-white border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
+                    placeholder="Enter address including city..."
+                  />
+                </div>
+
+                {/* 4. Pin Code (Column 2, Row 2) */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                    Pin Code
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.clientDetails.pinCode}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        clientDetails: {
+                          ...prev.clientDetails,
+                          pinCode: e.target.value,
+                        },
+                      }))
+                    }
+                    className="w-full px-4 py-2.5 text-sm border rounded-lg transition-all duration-300 placeholder-gray-400 bg-white border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
+                    placeholder="Enter pin code..."
+                  />
+                </div>
+
+                {/* 5. Contact Person (Column 1, Row 3) - NOW A DROPDOWN (Name only) */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                    Contact Person
+                  </label>
+                  <CustomDropdown
+                    options={uniqueContacts.map((c) => c.name)}
+                    value={formData.clientDetails.contactPersonName}
+                    onChange={handleContactSelect}
+                    placeholder="Select or type contact person..."
+                    allowCustom={true}
+                    disabled={isClientDataLoading}
+                  />
+                </div>
+
+                {/* 6. Contact Phone (Column 2, Row 3) - POPULATED BY DROPDOWN SELECTION */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                    Contact Phone
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.clientDetails.contactPersonPhone}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        clientDetails: {
+                          ...prev.clientDetails,
+                          contactPersonPhone: e.target.value,
+                        },
+                      }))
+                    }
+                    className="w-full px-4 py-2.5 text-sm border rounded-lg transition-all duration-300 placeholder-gray-400 bg-white border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
+                    placeholder="Enter phone number..."
                   />
                 </div>
               </div>
@@ -1096,7 +1747,7 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
                         },
                       }))
                     }
-                    className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-300 placeholder-gray-400"
+                    className="w-full px-4 py-2.5 text-sm border rounded-lg transition-all duration-300 placeholder-gray-400 bg-white border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
                     placeholder="e.g., Aspirin Tablet Batch 101"
                   />
                 </div>
@@ -1105,7 +1756,7 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
                     Sample Type
                   </label>
                   <CustomDropdown
-                    options={mockSampleTypes}
+                    options={sampleTypeOptions}
                     value={formData.sampleData.sampleType}
                     onChange={(val) =>
                       setFormData((prev) => ({
@@ -1113,7 +1764,12 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
                         sampleData: { ...prev.sampleData, sampleType: val },
                       }))
                     }
-                    placeholder="Select sample type..."
+                    placeholder={
+                      isSampleTypesLoading
+                        ? "Loading sample types..."
+                        : "Select sample type..."
+                    }
+                    disabled={isSampleTypesLoading}
                   />
                 </div>
               </div>
@@ -1148,9 +1804,26 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
                       updateParameter(param.id, updatedParam)
                     }
                     onDelete={() => deleteParameter(param.id)}
+                    onLock={handleLockParameter}
                     index={index}
-                    showFeasibilityCheck={isPublished && !param.verifiedAt} // Show feasibility check only if published and not yet verified
+                    showFeasibilityCheck={isPublished}
                     isFormPublished={isPublished}
+                    regulationOptions={regulationOptions}
+                    isRegulationsLoading={isRegulationsLoading}
+                    methodOptions={methodOptions}
+                    isMethodsLoading={isMethodsLoading}
+                    specificationOptions={specificationOptions}
+                    isSpecificationsLoading={isSpecificationsLoading}
+                    instrumentOptions={instrumentOptions}
+                    isInstrumentsLoading={isInstrumentsLoading}
+                    labOptions={labOptions}
+                    isLabsLoading={isLabsLoading}
+                    chemicalOptions={chemicalOptions}
+                    isChemicalsLoading={isChemicalsLoading}
+                    columnOptions={columnOptions}
+                    isColumnsLoading={isColumnsLoading}
+                    standardOptions={standardOptions}
+                    isStandardsLoading={isStandardsLoading}
                   />
                 ))}
 
@@ -1165,9 +1838,8 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
               </div>
             </div>
 
-            {/* Actions Footer - REFACTORED AND UNIFIED BLOCK */}
+            {/* Actions Footer - REFACTORED BLOCK */}
             <div className="flex gap-4 pt-8 border-t border-gray-200">
-              
               {/* 1. Save Draft (Always available unless published) */}
               {!isPublished && (
                 <button
@@ -1180,7 +1852,7 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
                 </button>
               )}
 
-              {/* 2. Primary Action Button (Publish, Lock, or Update) */}
+              {/* 2. Primary Action Button (Publish or Save Changes) */}
               {!isPublished ? (
                 // A. Draft state: Publish button
                 <button
@@ -1201,55 +1873,36 @@ export default function FormPage({ onBack, _formId }: FormPageProps) {
                     </>
                   )}
                 </button>
-              ) : hasUnverifiedFeasibleParameters ? (
-                // B. Published state with UNVERIFIED feasible items: Lock button
+              ) : (
+                // B. Published state: Single Save Changes button (replaces Lock/Update)
                 <button
-                  onClick={handleVerifyFeasibility}
+                  onClick={handleSavePublished}
                   disabled={isSubmitting}
-                  className="flex-1 relative flex items-center justify-center gap-2.5 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-md hover:shadow-lg font-semibold overflow-hidden group disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="flex-1 relative flex items-center justify-center gap-2.5 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 shadow-md hover:shadow-lg font-semibold disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Verifying...
+                      Saving Changes...
                     </>
                   ) : (
                     <>
-                      <CheckCircle className="w-4 h-4" />
-                      Lock Verified Parameters
+                      <Save className="w-4 h-4" />
+                      Save Changes
                     </>
                   )}
-                </button>
-              ) : (
-                // C. Published state with NO unverified feasible items: Update button
-                <button
-                    onClick={handleUpdatePublished}
-                    disabled={isSubmitting}
-                    className="flex-1 relative flex items-center justify-center gap-2.5 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 shadow-md hover:shadow-lg font-semibold disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                    {isSubmitting ? (
-                        <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Updating...
-                        </>
-                    ) : (
-                        <>
-                        <Send className="w-4 h-4" />
-                        Update Changes
-                        </>
-                    )}
                 </button>
               )}
             </div>
             {/* END Actions Footer */}
 
-            {showToast && (
+            {/* RENAMED: showToast -> showPublishBanner */}
+            {showPublishBanner && (
               <div className="pt-8 border-t border-gray-200">
                 <ReferenceNumberBanner
                   referenceNo={referenceNo}
-                  onClose={() => setShowToast(false)}
+                  onClose={() => setShowPublishBanner(false)}
                 />
               </div>
             )}

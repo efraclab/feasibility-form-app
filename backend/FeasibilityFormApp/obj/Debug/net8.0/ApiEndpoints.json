@@ -1,0 +1,102 @@
+[
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetChemicals",
+    "RelativePath": "api/feasibilities/chemicals",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetClients",
+    "RelativePath": "api/feasibilities/clients",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetColumns",
+    "RelativePath": "api/feasibilities/columns",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetInstruments",
+    "RelativePath": "api/feasibilities/instruments",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetLabs",
+    "RelativePath": "api/feasibilities/labs",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetMethods",
+    "RelativePath": "api/feasibilities/methods",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetRegulations",
+    "RelativePath": "api/feasibilities/regulations",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetSampleTypes",
+    "RelativePath": "api/feasibilities/sample-types",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetSpecifications",
+    "RelativePath": "api/feasibilities/specifications",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetStandards",
+    "RelativePath": "api/feasibilities/standards",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  }
+]
