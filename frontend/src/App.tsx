@@ -2,11 +2,23 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import FormPage from './components/FormPage';
+import MasterViewer from './components/MasterViewer';
 
 // Wrapper component to inject the navigate function into Dashboard
 const DashboardWrapper = () => {
   const navigate = useNavigate();
-  return <Dashboard onNavigate={(screen, id) => navigate(id ? `/form/${id}` : '/form')} />;
+  
+  const handleNavigation = (screen: "form" | "master", id?: string) => {
+    if (screen === "master") {
+      navigate('/master');
+    } else if (id) {
+      navigate(`/form/${id}`);
+    } else {
+      navigate('/form');
+    }
+  };
+  
+  return <Dashboard onNavigate={handleNavigation} />;
 };
 
 // Wrapper component to inject navigation and params into FormPage
@@ -22,6 +34,13 @@ const FormPageWrapper = () => {
   );
 };
 
+// Wrapper component for MasterView
+const MasterViewWrapper = () => {
+  const navigate = useNavigate();
+  
+  return <MasterViewer onBack={() => navigate('/')} />;
+};
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -34,6 +53,9 @@ export default function App() {
         
         {/* Route 3: Edit Form (With ID) */}
         <Route path="/form/:id" element={<FormPageWrapper />} />
+        
+        {/* Route 4: Master View */}
+        <Route path="/master" element={<MasterViewWrapper />} />
       </Routes>
     </BrowserRouter>
   );

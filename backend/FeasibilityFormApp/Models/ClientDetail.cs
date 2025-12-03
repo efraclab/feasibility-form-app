@@ -13,4 +13,5 @@
         public string? ContactPersonEmail { get; set; }
         public string? GstNo { get; set; }
     }
+
 }

@@ -14,6 +14,8 @@ import {
   FileEdit,
   TrendingUp,
   Sparkles,
+  Database,
+  ArrowRight,
 } from "lucide-react";
 
 // --- Shared Static List Management ---
@@ -73,7 +75,7 @@ function getAllForms(): FormDetails[] {
 }
 
 interface DashboardProps {
-  onNavigate: (screen: "form", id?: string) => void;
+  onNavigate: (screen: "form" | "master", id?: string) => void;
 }
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
@@ -190,9 +192,18 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-4px); }
         }
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
         .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
         .animate-slideIn { animation: slideIn 0.4s ease-out; }
         .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-shimmer {
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+          background-size: 200% 100%;
+          animation: shimmer 2s infinite;
+        }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { 
@@ -246,6 +257,23 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           backdrop-filter: blur(8px);
           background: rgba(255, 255, 255, 0.9);
         }
+        .master-btn {
+          position: relative;
+          overflow: hidden;
+        }
+        .master-btn::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+          transition: left 0.5s;
+        }
+        .master-btn:hover::before {
+          left: 100%;
+        }
       `}</style>
 
       <div className="rounded-2xl max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -277,7 +305,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <button
+                    onClick={() => onNavigate("master")}
+                    className="master-btn group flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white rounded-lg transition-all duration-300 font-semibold text-sm shadow-lg hover:shadow-xl border border-blue-400/30"
+                  >
+                    <Database className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
+                    Visit Master
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                  </button>
                   <button
                     onClick={fetchForms}
                     disabled={isLoading}
