@@ -100,6 +100,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "FeasibilityFormApp.Controllers.LogController",
+    "Method": "GetLogs",
+    "RelativePath": "api/logs",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "FeasibilityFormApp.Models.LogRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "FeasibilityFormApp.Controllers.MasterController",
     "Method": "GetCommodities",
     "RelativePath": "api/master/commodities",

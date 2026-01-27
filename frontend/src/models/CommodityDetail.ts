@@ -14,4 +14,5 @@ export interface CommodityDetail {
   commodityParameterN: string;
   verticalName: string;
   tat: string
+  nablScope: string;
 }

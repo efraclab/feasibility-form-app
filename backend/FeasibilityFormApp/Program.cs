@@ -7,6 +7,8 @@ builder.Services.AddScoped<IFeasibilityRepository, FeasibilityRepository>();
 builder.Services.AddScoped<IFeasibilityService, FeasibilityService>();
 builder.Services.AddScoped<IMasterRepository, MasterRepository>();
 builder.Services.AddScoped<IMasterService, MasterService>();
+builder.Services.AddScoped<ILogRepository, LogRepository>();
+builder.Services.AddScoped<ILogService, LogService>();
 
 builder.Services.AddCors(options =>
 {

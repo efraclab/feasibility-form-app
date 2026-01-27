@@ -20,12 +20,12 @@ namespace FeasibilityFormApp.Repositories
             {
                 var query = @"
                     IF (
-                            @CommodityCode IS NULL
-                            AND @RegulationCode IS NULL
-                            AND @VerticalCode IS NULL
-                            AND @CommodityGroupCode IS NULL
-                            AND ( @SearchFilter IS NULL OR @SearchFilter = '' )
-                       )
+                        ( @CommodityCode IS NULL OR @CommodityCode = '' )
+                        AND ( @RegulationCode IS NULL OR @RegulationCode = '' )
+                        AND ( @VerticalCode IS NULL OR @VerticalCode = '' )
+                        AND ( @CommodityGroupCode IS NULL OR @CommodityGroupCode = '' )
+                        AND ( @SearchFilter IS NULL OR @SearchFilter = '' )
+                    )
                     BEGIN
                         SELECT TOP 0 *
                         FROM Regulation;
@@ -36,6 +36,7 @@ namespace FeasibilityFormApp.Repositories
                         R.RegulationCode,
                         R.RegulationName,
                         R.RegPlant,
+
                         R.RegParameter AS ParameterCode,
                         H.HEADDESC AS ParameterName,
 
@@ -59,7 +60,13 @@ namespace FeasibilityFormApp.Repositories
                             WHEN R.RegCommodityParameterN = '002' THEN 'FSSAI'
                             WHEN R.RegCommodityParameterN = '003' THEN 'Drug'
                             ELSE 'Unknown'
-                        END AS VerticalName
+                        END AS VerticalName,
+
+                        CASE 
+                            WHEN CP.nabl_scope = 'Y' THEN 'Yes'
+                            WHEN CP.nabl_scope = 'N' THEN 'No'
+                            ELSE NULL
+                        END AS NablScope
 
                     FROM Regulation R
 
@@ -74,7 +81,7 @@ namespace FeasibilityFormApp.Repositories
 
                     LEFT JOIN OCODEMST PG
                         ON PG.CODECD = R.ParameterGroupCode
-                           AND PG.CODETYPE = 'GM'
+                       AND PG.CODETYPE = 'GM'
 
                     OUTER APPLY (
                         SELECT TOP 1 *
@@ -85,41 +92,35 @@ namespace FeasibilityFormApp.Repositories
 
                     LEFT JOIN OCODEMST LAB
                         ON LAB.CODECD = CP.CommodityLabDistCode
-                           AND LAB.CODETYPE = 'DM'
+                       AND LAB.CODETYPE = 'DM'
 
                     WHERE
-                        R.RegulationCode = COALESCE(@RegulationCode, R.RegulationCode)
-                        AND R.CommodityCode = COALESCE(@CommodityCode, R.CommodityCode)
-                        AND R.RegCommodityParameterN = COALESCE(@VerticalCode, R.RegCommodityParameterN)
-                        AND R.CommodityGroupCode = COALESCE(@CommodityGroupCode, R.CommodityGroupCode)
-                        AND (
-                                @SearchFilter IS NULL OR @SearchFilter = ''
-                                OR C.CatagoryName LIKE '%' + @SearchFilter + '%'
-                                OR C.CatagoryCode LIKE '%' + @SearchFilter + '%'
-                                OR H.HEADDESC LIKE '%' + @SearchFilter + '%'
-                                OR H.HEADCD LIKE '%' + @SearchFilter + '%'
-                                OR LAB.CODECD LIKE '%' + @SearchFilter + '%'
-                                OR LAB.CODEDESC LIKE '%' + @SearchFilter + '%'
-                                OR R.RegulationCode LIKE '%' + @SearchFilter + '%'
-                                OR R.RegulationName LIKE '%' + @SearchFilter + '%'
-                            )
+                        ( @RegulationCode IS NULL OR @RegulationCode = '' 
+                          OR R.RegulationCode = @RegulationCode )
+
+                    AND ( @CommodityCode IS NULL OR @CommodityCode = '' 
+                          OR R.CommodityCode = @CommodityCode )
+
+                    AND ( @VerticalCode IS NULL OR @VerticalCode = '' 
+                          OR R.RegCommodityParameterN = @VerticalCode )
+
+                    AND ( @CommodityGroupCode IS NULL OR @CommodityGroupCode = '' 
+                          OR R.CommodityGroupCode = @CommodityGroupCode )
+
+                    AND (
+                            @SearchFilter IS NULL OR @SearchFilter = ''
+                            OR C.CatagoryName LIKE '%' + @SearchFilter + '%'
+                            OR C.CatagoryCode LIKE '%' + @SearchFilter + '%'
+                            OR H.HEADDESC LIKE '%' + @SearchFilter + '%'
+                            OR H.HEADCD LIKE '%' + @SearchFilter + '%'
+                            OR LAB.CODECD LIKE '%' + @SearchFilter + '%'
+                            OR LAB.CODEDESC LIKE '%' + @SearchFilter + '%'
+                            OR R.RegulationCode LIKE '%' + @SearchFilter + '%'
+                            OR R.RegulationName LIKE '%' + @SearchFilter + '%'
+                        )
 
                     ORDER BY R.RegParameter
-
-                    OFFSET CASE 
-                            WHEN @PageSize > 0 AND @PageNumber > 0 
-                            THEN (@PageNumber - 1) * @PageSize 
-                            ELSE 0 
-                           END ROWS
-
-                    FETCH NEXT CASE 
-                                WHEN @PageSize > 0 AND @PageNumber > 0 
-                                THEN @PageSize 
-                                ELSE 2147483647
-                              END ROWS ONLY;
-
                 ";
-
 
                 var parameters = new
                 {
@@ -129,8 +130,6 @@ namespace FeasibilityFormApp.Repositories
                     request.VerticalCode,
                     request.RegulationCode,
                     request.SearchFilter,
-                    PageNumber = request.PageNumber,
-                    PageSize = request.PageSize
                 };
 
                 return await connection.QueryAsync<CommodityDetail>(query, parameters);

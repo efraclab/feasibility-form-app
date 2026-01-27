@@ -1,33 +1,36 @@
+import axios from "axios";
 import type { CommodityRequest } from "../models/CommodityRequest";
 import type { CommodityDetailsResponse } from "../models/CommodityDetailsResponse";
 import type { DropdownOption } from "../models/DropdownOption";
 import type { FilterState } from "../models/FilterState";
 
 
-const API_BASE_URL = 'http://192.168.3.116:5077/api/master';
+const API_BASE_URL = "http://192.168.3.116:5077/api/master";
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 8000,
+});
+
 
 export const fetchCommodityDetails = async (
   request: CommodityRequest
 ): Promise<CommodityDetailsResponse> => {
   try {
-    console.log(request)
-    const response = await fetch(`${API_BASE_URL}/commodity-details`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    });
+    console.log("Request:", request);
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    const { data } = await api.post<CommodityDetailsResponse>(
+      "/commodity-details",
+      request
+    );
 
-    const data = await response.json();
-    console.log("commodity-details", data)
+    console.log("commodity-details:", data);
     return data;
   } catch (error) {
-    console.error('Error fetching commodity details:', error);
+    console.error("Error fetching commodity details:", error);
     throw error;
   }
 };
@@ -36,22 +39,13 @@ export const fetchCommodityOptions = async (
   commodityGroupCode?: string
 ): Promise<DropdownOption[]> => {
   try {
-    console.log("commodityGroupCode", commodityGroupCode);
+    const { data } = await api.get<DropdownOption[]>("/commodities", {
+      params: commodityGroupCode
+        ? { commodityGroupCode }
+        : undefined,
+    });
 
-    const url = commodityGroupCode
-      ? `${API_BASE_URL}/commodities?commodityGroupCode=${commodityGroupCode}`
-      : `${API_BASE_URL}/commodities`;
-
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    console.log("size", data.length);
-
+    console.log("commodities count:", data.length);
     return data;
   } catch (error) {
     console.error("Error fetching commodity options:", error);
@@ -59,56 +53,42 @@ export const fetchCommodityOptions = async (
   }
 };
 
-
-
 export const fetchCommodityGroupOptions = async (): Promise<DropdownOption[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/commodity-groups`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
+    const { data } = await api.get<DropdownOption[]>("/commodity-groups");
+    return data;
   } catch (error) {
-    console.error('Error fetching commodity group options:', error);
+    console.error("Error fetching commodity group options:", error);
     throw error;
   }
 };
 
 export const fetchLabOptions = async (): Promise<DropdownOption[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/labs`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
+    const { data } = await api.get<DropdownOption[]>("/labs");
+    return data;
   } catch (error) {
-    console.error('Error fetching lab options:', error);
+    console.error("Error fetching lab options:", error);
     throw error;
   }
 };
 
 export const fetchRegulationOptions = async (): Promise<DropdownOption[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/regulations`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
+    const { data } = await api.get<DropdownOption[]>("/regulations");
+    return data;
   } catch (error) {
-    console.error('Error fetching regulation options:', error);
+    console.error("Error fetching regulation options:", error);
     throw error;
   }
 };
 
 export const fetchVerticalOptions = async (): Promise<DropdownOption[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/verticals`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
+    const { data } = await api.get<DropdownOption[]>("/verticals");
+    return data;
   } catch (error) {
-    console.error('Error fetching vertical options:', error);
+    console.error("Error fetching vertical options:", error);
     throw error;
   }
 };
@@ -116,20 +96,17 @@ export const fetchVerticalOptions = async (): Promise<DropdownOption[]> => {
 
 export const buildCommodityRequest = (
   filters: FilterState,
-  pageNumber: number,
-  pageSize: number
-) => {
-  return {
-    commodityCode: filters.commodity || null,
-    commodityGroupCode: filters.commodityGroup || null,
-    regulationCode: filters.regulation || null,
-    verticalCode: filters.vertical || null,
-    searchFilter: filters.searchFilter || null,
-    pageNumber: pageNumber,
-    pageSize: pageSize,
-  };
-};
-
+  // pageNumber: number,
+  // pageSize: number
+): CommodityRequest => ({
+  commodityCode: filters.commodity,
+  commodityGroupCode: filters.commodityGroup,
+  regulationCode: filters.regulation,
+  verticalCode: filters.vertical,
+  searchFilter: filters.searchFilter,
+  // pageNumber,
+  // pageSize,
+});
 
 export const getPaginationText = (
   currentPage: number,
@@ -140,3 +117,15 @@ export const getPaginationText = (
   const to = Math.min(currentPage * pageSize, totalRecords);
   return { from, to, total: totalRecords };
 };
+
+
+api.interceptors.response.use(
+  response => response,
+  error => {
+    console.error(
+      "API Error:",
+      error.response?.data || error.message
+    );
+    return Promise.reject(error);
+  }
+);
