@@ -23,17 +23,24 @@ namespace FeasibilityFormApp.Repositories
             var offset = (request.PageNumber - 1) * request.PageSize;
 
             var query = @"
-                SELECT
+               SELECT
                     u.username AS Username,
                     l.userwrps AS RegNo,
-                    FORMAT(l.userdate, 'h:mm tt MMM dd, yyyy') AS Timestamp,
+                    FORMAT(l.userdate, 'h:mm tt MMM dd, yyyy') AS [Timestamp],
                     l.usersystem AS UserSystem,
-                    l.change AS Change,
+                    l.change AS [Change],
                     l.add_info AS UpdationInfo
                 FROM USERLOG2 l
-                JOIN userfile u ON l.userid = u.userid
-                WHERE l.add_info IS NOT NULL
-                  AND LTRIM(RTRIM(l.add_info)) <> ''
+                JOIN userfile u 
+                    ON l.userid = u.userid
+                WHERE
+                    l.add_info IS NOT NULL
+                    AND LTRIM(RTRIM(l.add_info)) <> ''
+                    AND (
+                        @RegNoSearch IS NULL 
+                        OR @RegNoSearch = ''
+                        OR l.userwrps LIKE '%' + @RegNoSearch + '%'
+                    )
                 ORDER BY l.userdate DESC
                 OFFSET @Offset ROWS
                 FETCH NEXT @PageSize ROWS ONLY;
@@ -43,7 +50,8 @@ namespace FeasibilityFormApp.Repositories
             return await connection.QueryAsync<Logs>(query, new
             {
                 Offset = offset,
-                PageSize = request.PageSize
+                PageSize = request.PageSize,
+                RegNoSearch = request.RegNo
             });
         }
 

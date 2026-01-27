@@ -24,6 +24,7 @@
 
         public string CommodityParameterN { get; set; }
         public string VerticalName { get; set; }
+        public string VerticalCode { get; set; }
         public string NablScope { get; set; }
     }
 }

@@ -299,6 +299,10 @@
           "pageSize": {
             "type": "integer",
             "format": "int32"
+          },
+          "regNo": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

@@ -13,6 +13,7 @@ export interface CommodityDetail {
   regulationCode: string;
   commodityParameterN: string;
   verticalName: string;
-  tat: string
+  verticalCode: string;
+  tat: string;
   nablScope: string;
 }

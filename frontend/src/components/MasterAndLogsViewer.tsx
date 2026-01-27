@@ -45,6 +45,7 @@ interface CustomDropdownProps {
   disabled?: boolean;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  disabledTooltip?: string;
 }
 
 interface MasterViewerProps {
@@ -86,6 +87,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   disabled = false,
   label,
   icon: Icon,
+  disabledTooltip,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -149,27 +151,28 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
     <div
       ref={dropdownRef}
       className={`relative group ${
-        disabled ? "opacity-60 pointer-events-none" : ""
+        disabled ? "opacity-60" : ""
       }`}
+      title={disabled && disabledTooltip ? disabledTooltip : undefined}
     >
       <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-2">
         <Icon className="w-3.5 h-3.5 text-emerald-600" />
         {label}
       </label>
-      <div className="relative">
+      <div className={`relative ${disabled ? "cursor-not-allowed" : ""}`}>
         <input
           type="text"
           value={displayValue}
           onFocus={() => !disabled && setIsOpen(true)}
           disabled={disabled}
           readOnly
-          className={`w-full px-4 py-2.5 text-sm border rounded-lg transition-all duration-300 placeholder-gray-400 cursor-pointer
+          className={`w-full px-4 py-2.5 text-sm border rounded-lg transition-all duration-300 placeholder-gray-400
             ${
               disabled
                 ? "bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed"
                 : value
-                  ? "bg-emerald-50/50 border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  : "bg-white border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  ? "bg-emerald-50/50 border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer"
+                  : "bg-white border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer"
             }`}
           placeholder={placeholder}
         />
@@ -257,7 +260,7 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageNumber: 1,
-    pageSize: 20,
+    pageSize: 10,
     hasMore: false,
   });
 
@@ -266,6 +269,7 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
   const [logsLoading, setLogsLoading] = useState(false);
   const [logsError, setLogsError] = useState<string | null>(null);
   const [logsPage, setLogsPage] = useState(1);
+  const [logsRegNoFilter, setLogsRegNoFilter] = useState("");
   const logsPageSize = 20;
 
   const tableTopRef = useRef<HTMLDivElement>(null);
@@ -312,12 +316,12 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
     }
   }, [filters, activeTab]); // Removed pagination.pageNumber from dependencies
 
-  // Load logs when logs tab is active
+  // Load logs when logs tab is active or filter changes
   useEffect(() => {
     if (activeTab === "logs") {
       loadLogs();
     }
-  }, [logsPage, activeTab]);
+  }, [logsPage, logsRegNoFilter, activeTab]);
 
   const loadCommodityData = async () => {
     setIsLoading(true);
@@ -358,6 +362,7 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
       const response = await fetchLogs({
         pageNumber: logsPage,
         pageSize: logsPageSize,
+        regNo: logsRegNoFilter,
       });
 
       setLogs(Array.isArray(response) ? response : []);
@@ -402,8 +407,8 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
           code = item.regulationCode;
           name = item.regulationName;
           break;
-        case "verticalName":
-          code = item.verticalName; // Use name as code for vertical
+        case "verticalCode":
+          code = item.verticalCode;
           name = item.verticalName;
           break;
       }
@@ -437,7 +442,7 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
   const commodityOptions = getFilteredOptions(allCommodityOptions, "commodityCode");
   const commodityGroupOptions = getFilteredOptions(allCommodityGroupOptions, "commodityGroupCode");
   const regulationOptions = getFilteredOptions(allRegulationOptions, "regulationCode");
-  const verticalOptions = getFilteredOptions(allVerticalOptions, "verticalName");
+  const verticalOptions = getFilteredOptions(allVerticalOptions, "verticalCode");
 
   const handleFilterChange = (key: keyof FilterState, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -477,6 +482,16 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
     if (tableTopRef.current) {
       tableTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  };
+
+  const handleLogsRegNoFilterChange = (value: string) => {
+    setLogsRegNoFilter(value);
+    setLogsPage(1); // Reset to page 1 when filter changes
+  };
+
+  const handleClearLogsFilter = () => {
+    setLogsRegNoFilter("");
+    setLogsPage(1);
   };
 
   const exportToExcel = () => {
@@ -745,6 +760,8 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
                     value={filters.regulation}
                     onChange={(value) => handleFilterChange("regulation", value)}
                     placeholder="Select Regulation"
+                    disabled={!filters.commodity && !filters.commodityGroup}
+                    disabledTooltip="Please select Commodity or Commodity Group first"
                   />
                   <CustomDropdown
                     label="Vertical"
@@ -753,6 +770,8 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
                     value={filters.vertical}
                     onChange={(value) => handleFilterChange("vertical", value)}
                     placeholder="Select Vertical"
+                    disabled={!filters.commodity && !filters.commodityGroup}
+                    disabledTooltip="Please select Commodity or Commodity Group first"
                   />
                 </div>
               </div>
@@ -1067,6 +1086,47 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
         {/* Audit Logs Tab Content */}
         {activeTab === "logs" && (
           <>
+            {/* Search Filter for Logs */}
+            <div className="mb-6 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-slate-50 to-white px-6 py-4 border-b border-slate-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md">
+                      <Filter className="w-5 h-5 text-white" />
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-800">
+                      Search Logs
+                    </h2>
+                  </div>
+                  {logsRegNoFilter && (
+                    <button
+                      onClick={handleClearLogsFilter}
+                      className="px-4 py-2 bg-gradient-to-r from-red-500 to-rose-600 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all duration-300"
+                    >
+                      Clear Filter
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-6">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <Search className="w-3.5 h-3.5 text-emerald-600" />
+                  Search by Registration Number
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
+                  <input
+                    type="text"
+                    value={logsRegNoFilter}
+                    onChange={(e) => handleLogsRegNoFilterChange(e.target.value)}
+                    placeholder="Enter registration number..."
+                    className="w-full pl-12 pr-4 py-3 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Error Alert */}
             {logsError && (
               <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
