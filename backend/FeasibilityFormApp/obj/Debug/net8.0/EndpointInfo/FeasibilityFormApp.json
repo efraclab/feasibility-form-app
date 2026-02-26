@@ -255,6 +255,140 @@
           }
         }
       }
+    },
+    "/api/parameters/upload": {
+      "post": {
+        "tags": [
+          "Parameter"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParameterUploadRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParameterUploadRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParameterUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parameters/logs": {
+      "get": {
+        "tags": [
+          "Parameter"
+        ],
+        "parameters": [
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parameters/search": {
+      "get": {
+        "tags": [
+          "Parameter"
+        ],
+        "parameters": [
+          {
+            "name": "term",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parameters": {
+      "get": {
+        "tags": [
+          "Parameter"
+        ],
+        "parameters": [
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -301,6 +435,206 @@
             "format": "int32"
           },
           "regNo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ParameterMaster": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "batchId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "parameterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "parameterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "parameterGroup": {
+            "type": "string",
+            "nullable": true
+          },
+          "parameterGroupCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "parameterSubGroup": {
+            "type": "string",
+            "nullable": true
+          },
+          "parameterSubGroupCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "commodityName": {
+            "type": "string",
+            "nullable": true
+          },
+          "commodityCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "commodityGroup": {
+            "type": "string",
+            "nullable": true
+          },
+          "nonFssaiFssaiDrug": {
+            "type": "string",
+            "nullable": true
+          },
+          "nonFssaiFssaiDrugCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "regulationName": {
+            "type": "string",
+            "nullable": true
+          },
+          "regulationCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "parameterLabDistribution": {
+            "type": "string",
+            "nullable": true
+          },
+          "labCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "tatDays": {
+            "type": "string",
+            "nullable": true
+          },
+          "parameterSequence": {
+            "type": "string",
+            "nullable": true
+          },
+          "outsourceYN": {
+            "type": "string",
+            "nullable": true
+          },
+          "sampleQuantityAnalysis": {
+            "type": "string",
+            "nullable": true
+          },
+          "sampleQuantityRetention": {
+            "type": "string",
+            "nullable": true
+          },
+          "requiredSampleQuantityUnit": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "nablScopeStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "methodName": {
+            "type": "string",
+            "nullable": true
+          },
+          "methodCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "specificationName": {
+            "type": "string",
+            "nullable": true
+          },
+          "specificationCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "fssaiCategoryNo": {
+            "type": "string",
+            "nullable": true
+          },
+          "subClause": {
+            "type": "string",
+            "nullable": true
+          },
+          "testUnit": {
+            "type": "string",
+            "nullable": true
+          },
+          "testCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "instrument": {
+            "type": "string",
+            "nullable": true
+          },
+          "loq": {
+            "type": "string",
+            "nullable": true
+          },
+          "parameterIndividualRate": {
+            "type": "string",
+            "nullable": true
+          },
+          "regulatoryRateDrug": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "addInfo": {
+            "type": "string",
+            "nullable": true
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "uploadedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastUpdatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastUpdatedBy": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ParameterUploadRequest": {
+        "type": "object",
+        "properties": {
+          "parameters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParameterMaster"
+            },
+            "nullable": true
+          },
+          "fileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "uploadedBy": {
             "type": "string",
             "nullable": true
           }

@@ -13,14 +13,13 @@ import {
   CheckCircle2,
   FileEdit,
   Database,
-  ArrowRight,
-  Sparkles,
-  Layers,
-  TrendingUp,
-  BarChart3,
+  Upload,
+  ClipboardCheck,
+  User,
+  LogOut,
+  ChevronDown,
 } from "lucide-react";
 
-// --- Shared Static List Management ---
 const MASTER_LIST_KEY = "allFormsMasterList";
 
 interface ClientDetails {
@@ -77,15 +76,28 @@ function getAllForms(): FormDetails[] {
 }
 
 interface DashboardProps {
-  onNavigate: (screen: "form" | "master", id?: string) => void;
+  onNavigate: (screen: "form" | "master" | "parameters" | "review", id?: string) => void;
+  employeeId: string;
+  username: string;
+  department: string;
+  role: string;
+  onLogout: () => void;
 }
 
-export default function Dashboard({ onNavigate }: DashboardProps) {
+export default function Dashboard({ 
+  onNavigate,
+  employeeId,
+  username,
+  department,
+  role,
+  onLogout 
+}: DashboardProps) {
   const [forms, setForms] = useState<Form[]>([]);
   const [filteredForms, setFilteredForms] = useState<Form[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
     fetchForms();
@@ -176,7 +188,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/20 to-teal-50/30">
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }
@@ -184,143 +196,172 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         }
         @keyframes slideIn {
           from { opacity: 0; transform: translateX(-20px); }
-          to { opacity: 1; transform: translateX(0); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes pulse-soft {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-slideIn { animation: slideIn 0.5s ease-out forwards; }
+        .form-card {
+          animation: fadeIn 0.5s ease-out forwards;
+          position: relative;
+          overflow: hidden;
         }
-        .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
-        .animate-slideIn { animation: slideIn 0.5s ease-out; }
-        .form-card { animation: fadeIn 0.3s ease-out backwards; }
-        .stat-card { animation: fadeIn 0.4s ease-out backwards; }
-        .card-hover { transition: all 0.3s ease; }
-        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(16, 185, 129, 0.15); }
+        .form-card:hover { box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15); }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
       `}</style>
 
-      <div className="max-w-[1600px] mx-auto px-6 py-8">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-            <div className="relative bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 px-8 py-8 overflow-hidden">
-              {/* Decorative circles */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-400/10 rounded-full blur-2xl translate-y-1/3 -translate-x-1/4"></div>
-              
-              <div className="relative flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center shadow-xl border border-white/20">
-                    <FlaskConical className="w-7 h-7 text-white" />
+      {/* Top Navigation Bar */}
+      <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
+        <div className="max-w-[1800px] mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Left: Logo and Title */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-md">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-slate-800">
+                    Feasibility Worksheets
+                  </h1>
+                  <p className="text-xs text-slate-500">
+                    Sample Analysis Management
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: User Menu and Actions */}
+            <div className="flex items-center gap-3">
+              {/* Refresh Button */}
+              <button
+                onClick={fetchForms}
+                disabled={isLoading}
+                className="p-2 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all disabled:opacity-50"
+                title="Refresh forms"
+              >
+                <RefreshCw
+                  className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`}
+                />
+              </button>
+
+              {/* User Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-white" />
                   </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-white mb-1">
-                      Feasibility Dashboard
-                    </h1>
-                    <p className="text-emerald-50 text-sm flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4" />
-                      Manage and track all feasibility forms
+                  <div className="text-left hidden md:block">
+                    <p className="text-xs font-semibold text-slate-800">
+                      {username}
                     </p>
+                    <p className="text-[10px] text-slate-500">{department}</p>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={fetchForms}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-lg transition-all duration-200 text-white font-medium shadow-lg"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    Refresh
-                  </button>
-                </div>
+                  <ChevronDown className="w-4 h-4 text-slate-600" />
+                </button>
+
+                {showUserMenu && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowUserMenu(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-20 animate-fadeIn">
+                      <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 border-b border-slate-200">
+                        <p className="font-semibold text-slate-800">
+                          {username}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          ID: {employeeId}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Role: {role}
+                        </p>
+                      </div>
+                      <div className="p-2">
+                        <button
+                          onClick={onLogout}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Hero Graphics Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Feasibility Section Card */}
-          <div className="animate-fadeIn">
-            <div className="bg-white rounded-xl shadow-lg border border-emerald-200 overflow-hidden hover:shadow-xl transition-all duration-300 h-full flex flex-col">
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5 border-b border-emerald-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-emerald-900">Feasibility Forms</h3>
-                    <p className="text-xs text-emerald-600">Create and manage requests</p>
-                  </div>
+      {/* Main Content */}
+      <div className="max-w-[1800px] mx-auto px-6 py-6">
+        {/* Simplified Toolbar Hero Section */}
+        <div className="mb-6 animate-fadeIn">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              {/* Create New Form */}
+              <button
+                onClick={() => onNavigate("form")}
+                className="group relative flex items-center gap-3 p-4 bg-gradient-to-br from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 rounded-xl border border-emerald-200 hover:border-emerald-300 transition-all shadow-sm hover:shadow-md"
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                  <Plus className="w-5 h-5 text-white" />
                 </div>
-              </div>
-              
-              <div className="p-6 flex-1 flex flex-col">
-                <p className="text-sm text-slate-600 mb-auto leading-relaxed">
-                  Create new feasibility forms for sample testing. Manage parameters, verify compliance, and track all your testing requests in one place.
-                </p>
-
-                {/* Action Button */}
-                <button
-                  onClick={() => onNavigate("form")}
-                  className="w-full group flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg mt-6"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Create New Request</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Master Viewer Section Card */}
-          <div className="animate-fadeIn" style={{ animationDelay: "100ms" }}>
-            <div className="bg-white rounded-xl shadow-lg border border-emerald-200 overflow-hidden hover:shadow-xl transition-all duration-300 h-full flex flex-col">
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5 border-b border-emerald-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md">
-                    <Database className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-emerald-900">Master Data Viewer</h3>
-                    <p className="text-xs text-emerald-600">View and analyze data</p>
-                  </div>
+                <div className="text-left">
+                  <p className="text-sm font-bold text-slate-800">New Form</p>
+                  <p className="text-xs text-slate-600">Create worksheet</p>
                 </div>
-              </div>
-              
-              <div className="p-6 flex-1 flex flex-col">
-                <p className="text-sm text-slate-600 mb-5 leading-relaxed">
-                  Access comprehensive commodity parameters, regulations, and audit logs. Advanced filtering and search capabilities for master data analysis.
-                </p>
-                
-                {/* Features List - Single Row */}
-                <div className="grid grid-cols-3 gap-3 mb-auto">
-                  <div className="flex flex-row items-center justify-center">
-                    <div className="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center border border-emerald-200">
-                      <Layers className="w-3 h-3 text-emerald-600" />
-                    </div>
-                    <span className="text-xs text-slate-700 font-medium ml-2">Commodity Master Data</span>
-                  </div>
-                  <div className="flex flex-row items-center text-center">
-                    <div className="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center border border-emerald-200">
-                      <BarChart3 className="w-3 h-3 text-emerald-600" />
-                    </div>
-                    <span className="text-xs text-slate-700 font-medium ml-2">Audit Logs & History</span>
-                  </div>
-                </div>
+              </button>
 
-                {/* Action Button */}
-                <button
-                  onClick={() => onNavigate("master")}
-                  className="w-full group flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg mt-6"
-                >
-                  <Database className="w-4 h-4" />
-                  <span>Visit Master Viewer</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                </button>
-              </div>
+              {/* Master & Logs */}
+              <button
+                onClick={() => onNavigate("master")}
+                className="group relative flex items-center gap-3 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 rounded-xl border border-blue-200 hover:border-blue-300 transition-all shadow-sm hover:shadow-md"
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                  <Database className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-bold text-slate-800">Master & Logs</p>
+                  <p className="text-xs text-slate-600">View all records</p>
+                </div>
+              </button>
+
+              {/* Upload Parameters */}
+              <button
+                onClick={() => onNavigate("parameters")}
+                className="group relative flex items-center gap-3 p-4 bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 rounded-xl border border-purple-200 hover:border-purple-300 transition-all shadow-sm hover:shadow-md"
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                  <Upload className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-bold text-slate-800">Upload Parameters</p>
+                  <p className="text-xs text-slate-600">Bulk import data</p>
+                </div>
+              </button>
+
+              {/* Review Batches */}
+              <button
+                onClick={() => onNavigate("review")}
+                className="group relative flex items-center gap-3 p-4 bg-gradient-to-br from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 rounded-xl border border-amber-200 hover:border-amber-300 transition-all shadow-sm hover:shadow-md"
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                  <ClipboardCheck className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-bold text-slate-800">Review Batches</p>
+                  <p className="text-xs text-slate-600">Check submissions</p>
+                </div>
+              </button>
             </div>
           </div>
         </div>
@@ -329,7 +370,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Search & Filter Sidebar */}
           <div className="lg:col-span-1 animate-slideIn">
-            <div className="bg-white rounded-xl shadow-lg border border-slate-200/80 p-5 sticky top-6">
+            <div className="bg-white rounded-xl shadow-md border border-slate-200 p-5 sticky top-6">
               <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center border border-emerald-100">
                   <Filter className="w-4 h-4 text-emerald-600" />
@@ -400,7 +441,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
           {/* Forms List */}
           <div className="lg:col-span-3 animate-fadeIn">
-            <div className="bg-white rounded-xl shadow-lg border border-slate-200/80 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -443,7 +484,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                             key={form.id}
                             onClick={() => handleFormClick(form)}
                             style={{ animationDelay: `${index * 40}ms` }}
-                            className="form-card group flex items-center justify-between p-4 border border-slate-200 rounded-xl cursor-pointer transition-all duration-300 hover:border-emerald-200 card-hover bg-white"
+                            className="form-card group flex items-center justify-between p-4 border border-slate-200 rounded-xl cursor-pointer transition-all duration-300 hover:border-emerald-200 bg-white"
                           >
                             <div className="flex-1 min-w-0 mr-4">
                               <div className="flex items-center gap-2.5 mb-2.5">

@@ -3,64 +3,120 @@
   "WorkspaceRootPath": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\repositories\\logrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:repositories\\logrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\parameterupdaterequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\parameterupdaterequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\repositories\\parameterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:repositories\\parameterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\parametermaster.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\parametermaster.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\parameteruploadrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\parameteruploadrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\services\\parameterservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:services\\parameterservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\parameteruploadresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\parameteruploadresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\repositories\\iparameterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:repositories\\iparameterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\parameteruploadlog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\parameteruploadlog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\loginrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\loginrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\commodityrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\commodityrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\logrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\logrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\repositories\\masterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:repositories\\masterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\commoditydetail.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\commoditydetail.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\controllers\\mastercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:controllers\\mastercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\services\\logservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:services\\logservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\controllers\\logcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:controllers\\logcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\logs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\logs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\services\\ilogservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:services\\ilogservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\repositories\\logrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:repositories\\logrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\repositories\\ilogrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:repositories\\ilogrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\logs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\logs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\repositories\\feasibilityrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:repositories\\feasibilityrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\controllers\\parametercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:controllers\\parametercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\services\\iparameterservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:services\\iparameterservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\repositories\\masterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:repositories\\masterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\repositories\\iuserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:repositories\\iuserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\repositories\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:repositories\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\utils\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:utils\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\services\\masterservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:services\\masterservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\repositories\\imasterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:repositories\\imasterrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\services\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:services\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\services\\imasterservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:services\\imasterservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\models\\logrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:models\\logrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|d:\\react-projects\\feasibility-form-app\\backend\\feasibilityformapp\\services\\logservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4439B0C8-BABD-4497-A5F0-590170BBA3A3}|FeasibilityFormApp.csproj|solutionrelative:services\\logservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -70,11 +126,120 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "ParameterRepository.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\ParameterRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\ParameterRepository.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\ParameterRepository.cs",
+              "RelativeToolTip": "Repositories\\ParameterRepository.cs",
+              "ViewState": "AgIAABMDAAAAAAAAAAAAABkDAABHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-28T10:25:03.795Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ParameterMaster.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\ParameterMaster.cs",
+              "RelativeDocumentMoniker": "Models\\ParameterMaster.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\ParameterMaster.cs",
+              "RelativeToolTip": "Models\\ParameterMaster.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACgAAAA7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-13T12:49:39.547Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ParameterUploadRequest.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\ParameterUploadRequest.cs",
+              "RelativeDocumentMoniker": "Models\\ParameterUploadRequest.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\ParameterUploadRequest.cs",
+              "RelativeToolTip": "Models\\ParameterUploadRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-30T05:12:58.726Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ParameterUpdateRequest.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\ParameterUpdateRequest.cs",
+              "RelativeDocumentMoniker": "Models\\ParameterUpdateRequest.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\ParameterUpdateRequest.cs",
+              "RelativeToolTip": "Models\\ParameterUpdateRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-03T06:58:16.182Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ParameterService.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\ParameterService.cs",
+              "RelativeDocumentMoniker": "Services\\ParameterService.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\ParameterService.cs",
+              "RelativeToolTip": "Services\\ParameterService.cs",
+              "ViewState": "AgIAAH0AAAAAAAAAAAA9wLkAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-28T10:29:05.034Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ParameterUploadResponse.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\ParameterUploadResponse.cs",
+              "RelativeDocumentMoniker": "Models\\ParameterUploadResponse.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\ParameterUploadResponse.cs",
+              "RelativeToolTip": "Models\\ParameterUploadResponse.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-16T10:07:14.354Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "IParameterRepository.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\IParameterRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\IParameterRepository.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\IParameterRepository.cs",
+              "RelativeToolTip": "Repositories\\IParameterRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwAoAAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-16T10:30:48.993Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ParameterUploadLog.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\ParameterUploadLog.cs",
+              "RelativeDocumentMoniker": "Models\\ParameterUploadLog.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\ParameterUploadLog.cs",
+              "RelativeToolTip": "Models\\ParameterUploadLog.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-13T05:40:10.674Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "LogInRequest.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\LogInRequest.cs",
+              "RelativeDocumentMoniker": "Models\\LogInRequest.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\LogInRequest.cs",
+              "RelativeToolTip": "Models\\LogInRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T04:38:30.87Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
               "Title": "CommodityRequest.cs",
               "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\CommodityRequest.cs",
               "RelativeDocumentMoniker": "Models\\CommodityRequest.cs",
@@ -82,12 +247,227 @@
               "RelativeToolTip": "Models\\CommodityRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAuAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-27T04:32:00.726Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-27T04:32:00.726Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 10,
+              "Title": "LogRepository.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\LogRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\LogRepository.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\LogRepository.cs",
+              "RelativeToolTip": "Repositories\\LogRepository.cs",
+              "ViewState": "AgIAACoAAAAAAAAAAAAowDMAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-16T10:31:36.311Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ILogRepository.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\ILogRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\ILogRepository.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\ILogRepository.cs",
+              "RelativeToolTip": "Repositories\\ILogRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-16T10:31:28.439Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Logs.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\Logs.cs",
+              "RelativeDocumentMoniker": "Models\\Logs.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\Logs.cs",
+              "RelativeToolTip": "Models\\Logs.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-16T10:33:11.875Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "FeasibilityRepository.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\FeasibilityRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\FeasibilityRepository.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\FeasibilityRepository.cs",
+              "RelativeToolTip": "Repositories\\FeasibilityRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAABRAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T04:33:49.791Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-01-31T04:36:12.769Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "ParameterController.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Controllers\\ParameterController.cs",
+              "RelativeDocumentMoniker": "Controllers\\ParameterController.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Controllers\\ParameterController.cs",
+              "RelativeToolTip": "Controllers\\ParameterController.cs",
+              "ViewState": "AgIAAJMAAAAAAAAAAAAiwLIAAABnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-28T10:30:24.296Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "IParameterService.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\IParameterService.cs",
+              "RelativeDocumentMoniker": "Services\\IParameterService.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\IParameterService.cs",
+              "RelativeToolTip": "Services\\IParameterService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAABcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-02T10:02:28.493Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "MasterRepository.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\MasterRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\MasterRepository.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\MasterRepository.cs",
+              "RelativeToolTip": "Repositories\\MasterRepository.cs",
+              "ViewState": "AgIAACoAAAAAAAAAAAAowDoAAABSAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-02T04:46:15.723Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "IUserRepository.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\IUserRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\IUserRepository.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\IUserRepository.cs",
+              "RelativeToolTip": "Repositories\\IUserRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T04:39:56.501Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "User.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\User.cs",
+              "RelativeDocumentMoniker": "Models\\User.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\User.cs",
+              "RelativeToolTip": "Models\\User.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwAYAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T04:31:43.67Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "JwtService.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Utils\\JwtService.cs",
+              "RelativeDocumentMoniker": "Utils\\JwtService.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Utils\\JwtService.cs",
+              "RelativeToolTip": "Utils\\JwtService.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAxwBwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T04:35:44.4Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "UserRepository.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\UserRepository.cs",
+              "RelativeDocumentMoniker": "Repositories\\UserRepository.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\UserRepository.cs",
+              "RelativeToolTip": "Repositories\\UserRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAA4AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T04:23:49.126Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "UserService.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\UserService.cs",
+              "RelativeDocumentMoniker": "Services\\UserService.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\UserService.cs",
+              "RelativeToolTip": "Services\\UserService.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAswCYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T04:37:29.176Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAADMAAAAAAAAAAAAAAEAAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-03T12:42:08.797Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AuthController.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "Controllers\\AuthController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T04:41:55.267Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "IUserService.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\IUserService.cs",
+              "RelativeDocumentMoniker": "Services\\IUserService.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\IUserService.cs",
+              "RelativeToolTip": "Services\\IUserService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwAcAAAA3AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T04:39:39.517Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "LogRequest.cs",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\LogRequest.cs",
+              "RelativeDocumentMoniker": "Models\\LogRequest.cs",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\LogRequest.cs",
+              "RelativeToolTip": "Models\\LogRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T04:38:33.742Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "Properties\\launchSettings.json",
+              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Properties\\launchSettings.json",
+              "RelativeToolTip": "Properties\\launchSettings.json",
+              "ViewState": "AgIAAAgAAAAAAAAAAABRwBoAAABKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-01-28T12:00:54.718Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
               "Title": "LogService.cs",
               "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\LogService.cs",
               "RelativeDocumentMoniker": "Services\\LogService.cs",
@@ -96,166 +476,6 @@
               "ViewState": "AgIAAAUAAAAAAAAAAAAxwBEAAAA+AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-01-24T06:51:41.218Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "LogRepository.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\LogRepository.cs",
-              "RelativeDocumentMoniker": "Repositories\\LogRepository.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\LogRepository.cs",
-              "RelativeToolTip": "Repositories\\LogRepository.cs",
-              "ViewState": "AgIAACQAAAAAAAAAAADwvzYAAAAPAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-24T05:29:13.192Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "MasterRepository.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\MasterRepository.cs",
-              "RelativeDocumentMoniker": "Repositories\\MasterRepository.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\MasterRepository.cs",
-              "RelativeToolTip": "Repositories\\MasterRepository.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAADoAAABSAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-02T04:46:15.723Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "LogRequest.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\LogRequest.cs",
-              "RelativeDocumentMoniker": "Models\\LogRequest.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\LogRequest.cs",
-              "RelativeToolTip": "Models\\LogRequest.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAApAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-24T07:22:09.672Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "CommodityDetail.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\CommodityDetail.cs",
-              "RelativeDocumentMoniker": "Models\\CommodityDetail.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\CommodityDetail.cs",
-              "RelativeToolTip": "Models\\CommodityDetail.cs",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAmwBoAAAAwAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-03T09:08:44.707Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "MasterController.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Controllers\\MasterController.cs",
-              "RelativeDocumentMoniker": "Controllers\\MasterController.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Controllers\\MasterController.cs",
-              "RelativeToolTip": "Controllers\\MasterController.cs",
-              "ViewState": "AgIAAA0AAAAAAAAAAAAgwB0AAAAIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-03T06:54:24.244Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "LogController.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Controllers\\LogController.cs",
-              "RelativeDocumentMoniker": "Controllers\\LogController.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Controllers\\LogController.cs",
-              "RelativeToolTip": "Controllers\\LogController.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAABQAAABGAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-24T06:53:23.639Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "Logs.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\Logs.cs",
-              "RelativeDocumentMoniker": "Models\\Logs.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Models\\Logs.cs",
-              "RelativeToolTip": "Models\\Logs.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAwAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-24T06:17:00.223Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "ILogService.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\ILogService.cs",
-              "RelativeDocumentMoniker": "Services\\ILogService.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\ILogService.cs",
-              "RelativeToolTip": "Services\\ILogService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAA/AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-24T07:23:50.718Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "Program.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAfAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-03T12:42:08.797Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "ILogRepository.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\ILogRepository.cs",
-              "RelativeDocumentMoniker": "Repositories\\ILogRepository.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\ILogRepository.cs",
-              "RelativeToolTip": "Repositories\\ILogRepository.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAqwAYAAAA/AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-24T06:52:40.073Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "MasterService.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\MasterService.cs",
-              "RelativeDocumentMoniker": "Services\\MasterService.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\MasterService.cs",
-              "RelativeToolTip": "Services\\MasterService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAvAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-03T06:53:59.561Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 14,
-              "Title": "IMasterService.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\IMasterService.cs",
-              "RelativeDocumentMoniker": "Services\\IMasterService.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Services\\IMasterService.cs",
-              "RelativeToolTip": "Services\\IMasterService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAABWAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-03T06:54:15.479Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "IMasterRepository.cs",
-              "DocumentMoniker": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\IMasterRepository.cs",
-              "RelativeDocumentMoniker": "Repositories\\IMasterRepository.cs",
-              "ToolTip": "D:\\react-projects\\feasibility-form-app\\backend\\FeasibilityFormApp\\Repositories\\IMasterRepository.cs",
-              "RelativeToolTip": "Repositories\\IMasterRepository.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAABUAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-03T06:53:36.29Z"
             }
           ]
         }

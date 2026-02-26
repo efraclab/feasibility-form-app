@@ -81,3 +81,4 @@ D:\react-projects\feasibility-form-app\backend\FeasibilityFormApp\obj\Debug\net8
 D:\react-projects\feasibility-form-app\backend\FeasibilityFormApp\obj\Debug\net8.0\FeasibilityFormApp.genruntimeconfig.cache
 D:\react-projects\feasibility-form-app\backend\FeasibilityFormApp\obj\Debug\net8.0\ref\FeasibilityFormApp.dll
 D:\react-projects\feasibility-form-app\backend\FeasibilityFormApp\obj\Debug\net8.0\swae.build.ex.cache
+D:\react-projects\feasibility-form-app\backend\FeasibilityFormApp\bin\Debug\net8.0\Newtonsoft.Json.dll

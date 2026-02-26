@@ -1,0 +1,15 @@
+﻿namespace FeasibilityFormApp.Models
+{
+    public class ParameterUploadLog
+    {
+        public long Id { get; set; }
+        public string FileName { get; set; }
+        public int TotalRows { get; set; }
+        public int SuccessfulRows { get; set; }
+        public int FailedRows { get; set; }
+        public string UploadedBy { get; set; }
+        public DateTime UploadedAt { get; set; }
+        public string Status { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+}

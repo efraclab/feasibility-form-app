@@ -1,0 +1,347 @@
+[
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.AuthController",
+    "Method": "Login",
+    "RelativePath": "api/auth/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "FeasibilityFormApp.Models.LogInRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetChemicals",
+    "RelativePath": "api/feasibilities/chemicals",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetClients",
+    "RelativePath": "api/feasibilities/clients",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetColumns",
+    "RelativePath": "api/feasibilities/columns",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetInstruments",
+    "RelativePath": "api/feasibilities/instruments",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetLabs",
+    "RelativePath": "api/feasibilities/labs",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetMethods",
+    "RelativePath": "api/feasibilities/methods",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetRegulations",
+    "RelativePath": "api/feasibilities/regulations",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetSampleTypes",
+    "RelativePath": "api/feasibilities/sample-types",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetSpecifications",
+    "RelativePath": "api/feasibilities/specifications",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.FeasibilityController",
+    "Method": "GetStandards",
+    "RelativePath": "api/feasibilities/standards",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.LogController",
+    "Method": "GetLogs",
+    "RelativePath": "api/logs",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "FeasibilityFormApp.Models.LogRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.MasterController",
+    "Method": "GetCommodities",
+    "RelativePath": "api/master/commodities",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "commodityGroupCode",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.MasterController",
+    "Method": "GetCommodityDetails",
+    "RelativePath": "api/master/commodity-details",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "FeasibilityFormApp.Models.CommodityRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.MasterController",
+    "Method": "GetCommodityGroups",
+    "RelativePath": "api/master/commodity-groups",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.MasterController",
+    "Method": "GetLabs",
+    "RelativePath": "api/master/labs",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.MasterController",
+    "Method": "GetRegulations",
+    "RelativePath": "api/master/regulations",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.MasterController",
+    "Method": "GetVerticals",
+    "RelativePath": "api/master/verticals",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.ParameterController",
+    "Method": "UpdateParameters",
+    "RelativePath": "api/parameters",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "FeasibilityFormApp.Models.ParameterUpdateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.ParameterController",
+    "Method": "GetParameters",
+    "RelativePath": "api/parameters",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "employeeId",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "role",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageNumber",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.ParameterController",
+    "Method": "GetUploadLogs",
+    "RelativePath": "api/parameters/logs",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "pageNumber",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.ParameterController",
+    "Method": "SearchParameters",
+    "RelativePath": "api/parameters/search",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "employeeId",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "role",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "term",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageNumber",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.ParameterController",
+    "Method": "UploadParameters",
+    "RelativePath": "api/parameters/upload",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "FeasibilityFormApp.Models.ParameterUploadRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FeasibilityFormApp.Controllers.ParameterController",
+    "Method": "UploadToMaster",
+    "RelativePath": "api/parameters/upload-to-master/{batchId}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "batchId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "FeasibilityFormApp.Models.ParameterUploadRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

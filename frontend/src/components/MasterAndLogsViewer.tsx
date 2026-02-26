@@ -260,7 +260,7 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageNumber: 1,
-    pageSize: 10,
+    pageSize: 20,
     hasMore: false,
   });
 
@@ -616,34 +616,32 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/20 to-teal-50/30">
-      <div className="max-w-[1800px] mx-auto px-8 py-10">
+      <div className="container mx-auto px-4 py-8">
         {/* Header Section */}
         <div className="mb-8">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-            <div className="relative bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 px-8 py-8 overflow-hidden">
+            <div className="relative bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 px-6 py-5 overflow-hidden">
               {/* Decorative circles */}
               <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-400/10 rounded-full blur-2xl translate-y-1/3 -translate-x-1/4"></div>
 
-              <div className="relative">
+              <div className="flex items-center gap-4">
                 <button
                   onClick={onBack}
-                  className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors duration-200 mb-6 text-sm font-medium"
+                  className="p-2 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-all duration-200 backdrop-blur-sm"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back to Dashboard
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
-
-                <div className="flex items-center gap-4 mb-2">
-                  <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                    <Database className="w-7 h-7 text-white" />
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm shadow-lg">
+                    <Database className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold text-white mb-1">
-                      Master Data Viewer
-                    </h1>
-                    <p className="text-emerald-50 text-sm">
-                      Browse and manage commodity master data
+                    <h2 className="text-2xl font-bold text-white">
+                      Master Data and Logs Viewer
+                    </h2>
+                    <p className="text-emerald-100 text-sm">
+                      Browse and manage commodity master data and audit logs
                     </p>
                   </div>
                 </div>
