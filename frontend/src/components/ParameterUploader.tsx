@@ -313,7 +313,7 @@ export default function ParameterUploader({ employeeId, username, role, onBack }
               }
 
               const instrument = row[COL_INSTRUMENT]?.toString().trim() ?? "";
-              if (instrument !== "" && instrument.length > 5) {
+              if (instrument !== "" && instrument.length > 50) {
                 fieldErrors.push(`Row ${rowNum}: INSTRUMENT "${instrument}" exceeds 5 characters (found ${instrument.length}).`);
               }
 

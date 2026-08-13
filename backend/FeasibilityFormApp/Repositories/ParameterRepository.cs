@@ -968,6 +968,7 @@ SELECT
                         param.OutsourceYN,
                         param.MethodCode,
                         param.SpecificationCode,
+                        param.LabCode,
                         param.FssaiCategoryNo,
                         param.SubClause,
                         param.SpecificationName,

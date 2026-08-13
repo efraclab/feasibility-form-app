@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FeasibilityFormApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+89e72e26f36a52e72a730b2ccea43fa986ddd04f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b0d4f5b5182ce630fd36f1252e17779e68a61ffe")]
 [assembly: System.Reflection.AssemblyProductAttribute("FeasibilityFormApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FeasibilityFormApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

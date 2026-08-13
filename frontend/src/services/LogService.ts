@@ -3,7 +3,7 @@ import type { LogRequest } from "../models/LogRequest";
 import type { LogResponse } from "../models/LogResponse";
 
 
-const API_BASE_URL = "http://192.168.3.116:5077/api/logs";
+const API_BASE_URL = "http://192.168.3.201:5077/api/logs";
 
 const api = axios.create({
   baseURL: API_BASE_URL,

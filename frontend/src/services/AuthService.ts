@@ -2,7 +2,7 @@ import axios from "axios";
 import type { LoginRequest } from "../models/LoginRequest";
 import type { LoginResponse } from "../models/LoginResponse";
 
-const API_BASE_URL = 'http://192.168.3.116:5077/api';
+const API_BASE_URL = 'http://192.168.3.201:5077/api';
 
 export async function login(
   payload: LoginRequest
