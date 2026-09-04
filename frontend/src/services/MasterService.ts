@@ -5,7 +5,7 @@ import type { DropdownOption } from "../models/DropdownOption";
 import type { FilterState } from "../models/FilterState";
 
 
-const API_BASE_URL = "http://192.168.3.201:5077/api/master";
+const API_BASE_URL = "http://192.168.3.250:5077/api/master";
 
 const api = axios.create({
   baseURL: API_BASE_URL,

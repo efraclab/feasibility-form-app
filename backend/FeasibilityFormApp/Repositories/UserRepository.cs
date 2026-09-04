@@ -10,38 +10,46 @@ namespace FeasibilityFormApp.Repositories
 
         public UserRepository(IConfiguration configuration)
         {
-            _connectionString = configuration["Connnectionstrings:MyConnection"];
+            _connectionString = configuration["Connnectionstrings:MyConnection"]
+                ?? throw new InvalidOperationException(
+                    "Database connection string 'Connnectionstrings:MyConnection' was not found."
+                );
         }
 
         public async Task<User?> GetUserAsync(string employeeId)
         {
             const string query = @"
-                SELECT 
-                    U.USERNAME AS [Username], 
-                    U.USERPSWD AS [Password], 
-                    U.USERLOGINID AS [EmployeeId], 
-                    U.USERDESIGNATION AS [Designation], 
-                    R2.ROLE_NAME AS [Role]
-                FROM USERFILE U
-                LEFT JOIN USER_ROLE_REL R1 
-                    ON U.USERID = R1.USERID
-                LEFT JOIN ROLE_MAST R2 
-                    ON R2.ROLE_CODE = R1.ROLE_CODE
-                LEFT JOIN OCODEMST BD
-                    ON BD.CODEDESC = U.USERNAME
-                    AND BD.CODETYPE = 'SP'
-                WHERE U.USERLOGINID = @EmployeeId
+                SELECT TOP 1
+                    U.USERLOGINID AS [EmployeeId],
+                    U.USERNAME AS [Username],
+                    U.USERPSWD AS [Password],
+                    U.USERDEPT AS [Department],
+                    R.ROLE_CODE AS [RoleCode],
+                    R.ROLE_NAME AS [Role]
+                FROM [Efrac_Lims_2025].[dbo].[USERFILE] U
+
+                INNER JOIN [Efrac_Lims_2025].[dbo].[USER_ROLE_REL] UR
+                    ON U.USERID = UR.USERID
+
+                INNER JOIN [Efrac_Lims_2025].[dbo].[ROLE_MAST] R
+                    ON UR.ROLE_CODE = R.ROLE_CODE
+
+                WHERE 
+                    U.USERLOGINID = @EmployeeId
+                    AND R.ROLE_CODE IN ('ROLE000006', 'ROLE000007', 'ROLE000008', 'ROLE000020')
+
                 ORDER BY U.USERNAME;
             ";
 
-            using (var connection = new SqlConnection(_connectionString))
-            {
+            await using var connection = new SqlConnection(_connectionString);
 
-
-                return await connection.QueryFirstOrDefaultAsync<User>(query,
-                new { EmployeeId = employeeId });
-            }
+            return await connection.QueryFirstOrDefaultAsync<User>(
+                query,
+                new
+                {
+                    EmployeeId = employeeId
+                }
+            );
         }
-
     }
 }

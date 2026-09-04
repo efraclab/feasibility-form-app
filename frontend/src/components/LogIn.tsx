@@ -34,23 +34,91 @@ interface ValidationErrors {
 const decodeAndStoreUserData = (token: string): boolean => {
   try {
     const base64Url = token.split(".")[1];
+
     if (!base64Url) {
       console.error("Invalid token format");
       return false;
     }
-    
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = atob(base64);
+
+    // JWT payload is base64url encoded.
+    let base64 = base64Url
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    while (base64.length % 4 !== 0) {
+      base64 += "=";
+    }
+
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map(
+          (char) =>
+            "%" +
+            ("00" + char.charCodeAt(0).toString(16)).slice(-2),
+        )
+        .join(""),
+    );
+
     const decoded = JSON.parse(jsonPayload);
 
-    if (decoded) {
-      localStorage.setItem("EmployeeId", decoded.EmployeeId || "");
-      localStorage.setItem("Username", decoded.Username || "");
-      localStorage.setItem("Department", decoded.Department || "");
-      localStorage.setItem("Role", decoded.Role || "");
-      return true;
+    // Support both PascalCase and camelCase claim names.
+    const employeeId =
+      decoded.EmployeeId ??
+      decoded.employeeId ??
+      decoded.USERLOGINID ??
+      decoded.userLoginId ??
+      "";
+
+    const username =
+      decoded.Username ??
+      decoded.username ??
+      decoded.USERNAME ??
+      "";
+
+    const department =
+      decoded.Department ??
+      decoded.department ??
+      decoded.USERDEPT ??
+      decoded.userDept ??
+      "";
+
+    const roleCode =
+      decoded.RoleCode ??
+      decoded.roleCode ??
+      decoded.usrRoleRight ??
+      "";
+
+    const roleName =
+      decoded.Role ??
+      decoded.role ??
+      "";
+
+    if (!employeeId) {
+      console.error(
+        "EmployeeId was not found in the authentication token.",
+        decoded,
+      );
+      return false;
     }
-    return false;
+
+    // Canonical keys used by the workflow screens.
+    localStorage.setItem("employeeId", String(employeeId));
+    localStorage.setItem("username", String(username));
+    localStorage.setItem("department", String(department));
+    localStorage.setItem("role", String(roleCode));
+    localStorage.setItem("roleCode", String(roleCode));
+    localStorage.setItem("roleName", String(roleName));
+
+    // Keep PascalCase aliases for existing screens that still use them.
+    localStorage.setItem("EmployeeId", String(employeeId));
+    localStorage.setItem("Username", String(username));
+    localStorage.setItem("Department", String(department));
+    localStorage.setItem("Role", String(roleCode));
+    localStorage.setItem("RoleCode", String(roleCode));
+    localStorage.setItem("RoleName", String(roleName));
+
+    return true;
   } catch (error) {
     console.error("Token decoding error:", error);
     return false;

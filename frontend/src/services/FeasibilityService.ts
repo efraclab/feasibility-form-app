@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { ClientDetail } from "../models/ClientDetail";
 
 
-const API_BASE_URL = 'http://192.168.3.201:5077/api/feasibilities';
+const API_BASE_URL = 'http://192.168.3.250:5077/api/feasibilities';
 
 export const fetchClients = async (): Promise<ClientDetail[]> => {
   

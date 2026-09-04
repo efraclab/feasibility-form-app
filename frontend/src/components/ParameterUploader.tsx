@@ -67,6 +67,7 @@ const REQUIRED_HEADERS = [
   "REGULATION NAME",
   "REGULATION CODE",
   "PARAMETER LAB DISTRIBUTION (FDS/MT/RA/MB/WTR/ENV/GAS)",
+  "LAB NAME",
   "LAB CODE",
   "TAT DAYS",
   "PARAMETER SEQUENCE",
@@ -288,16 +289,23 @@ export default function ParameterUploader({ employeeId, username, role, onBack }
               return;
             }
 
-            // --- Field-level validation ---
+            // --- Quotation + field-level validation ---
             // Column index constants (0-based, matching REQUIRED_HEADERS order)
-            const COL_PARAMETER_CODE = 1;       // "PARAMETER CODE"
-            const COL_TAT_DAYS = 16;            // "TAT DAYS"
-            const COL_PARAMETER_SEQUENCE = 17;  // "PARAMETER SEQUENCE"
-            const COL_SAMPLE_QTY_ANALYSIS = 19; // "SAMPLE QUANTITY REQUIRED-FOR ANALYSIS"
-            const COL_SAMPLE_QTY_RETENTION = 20;// "SAMPLE QUANTITY REQUIRED-FOR RETENTION"
-            const COL_INSTRUMENT = 32;          // "INSTRUMENT"
-            const COL_PARAM_INDIVIDUAL_RATE = 34; // "PARAMETER INDIVIDUAL RATE"
-            const COL_REGULATORY_RATE_DRUG = 35;  // "REGULATORY RATE (FOR DRUG)"
+            const COL_PARAMETER_NAME = 0;
+            const COL_PARAMETER_CODE = 1;
+            const COL_COMMODITY_NAME = 6;
+            const COL_NON_FSSAI_FSSAI_DRUG = 10;
+            const COL_NON_FSSAI_FSSAI_DRUG_CODE = 11;
+            const COL_REGULATION_NAME = 12;
+            const COL_PARAMETER_LAB_DISTRIBUTION = 14;
+            const COL_LAB_NAME = 15;
+            const COL_TAT_DAYS = 17;
+            const COL_PARAMETER_SEQUENCE = 18;
+            const COL_SAMPLE_QTY_ANALYSIS = 20;
+            const COL_SAMPLE_QTY_RETENTION = 21;
+            const COL_INSTRUMENT = 33;
+            const COL_PARAM_INDIVIDUAL_RATE = 35;
+            const COL_REGULATORY_RATE_DRUG = 36;
 
             const isInteger = (val: string) => /^-?\d+$/.test(val.trim());
             const isFloat = (val: string) => /^-?\d+(\.\d+)?$/.test(val.trim());
@@ -305,46 +313,124 @@ export default function ParameterUploader({ employeeId, username, role, onBack }
             const fieldErrors: string[] = [];
 
             nonEmptyRows.forEach((row, idx) => {
-              const rowNum = idx + 2; // +2: 1-based + skip header
+              const rowNum = idx + 2; // Excel row number
 
-              const paramCode = row[COL_PARAMETER_CODE]?.toString().trim() ?? "";
+              const commodityName =
+                row[COL_COMMODITY_NAME]?.toString().trim() ?? "";
+              const parameterName =
+                row[COL_PARAMETER_NAME]?.toString().trim() ?? "";
+              const parameterLabDistribution =
+                row[COL_PARAMETER_LAB_DISTRIBUTION]?.toString().trim() ?? "";
+              const labName =
+                row[COL_LAB_NAME]?.toString().trim() ?? "";
+              const regulationName =
+                row[COL_REGULATION_NAME]?.toString().trim() ?? "";
+
+              // Quotation mandatory fields
+              if (!commodityName) {
+                fieldErrors.push(`Row ${rowNum}: COMMODITY NAME is required.`);
+              }
+
+              if (!parameterName) {
+                fieldErrors.push(`Row ${rowNum}: PARAMETER NAME is required.`);
+              }
+
+              if (!labName) {
+                fieldErrors.push(
+                  `Row ${rowNum}: LAB NAME is required.`,
+                );
+              }
+
+              if (!regulationName) {
+                fieldErrors.push(`Row ${rowNum}: REGULATION NAME is required.`);
+              }
+
+              // Drug can be identified either by description or code.
+              const drugType =
+                row[COL_NON_FSSAI_FSSAI_DRUG]?.toString().trim() ?? "";
+              const drugCode =
+                row[COL_NON_FSSAI_FSSAI_DRUG_CODE]?.toString().trim() ?? "";
+
+              const isDrug =
+                drugCode.toUpperCase() === "003" ||
+                drugType.toUpperCase() === "DRUG";
+
+              const indivRate =
+                row[COL_PARAM_INDIVIDUAL_RATE]?.toString().trim() ?? "";
+              const regRate =
+                row[COL_REGULATORY_RATE_DRUG]?.toString().trim() ?? "";
+
+              if (isDrug && !indivRate) {
+                fieldErrors.push(
+                  `Row ${rowNum}: PARAMETER INDIVIDUAL RATE is required for Drug.`,
+                );
+              }
+
+              if (isDrug && !regRate) {
+                fieldErrors.push(
+                  `Row ${rowNum}: REGULATORY RATE (FOR DRUG) is required for Drug.`,
+                );
+              }
+
+              // Existing datatype / length validation
+              const paramCode =
+                row[COL_PARAMETER_CODE]?.toString().trim() ?? "";
               if (paramCode !== "" && paramCode.length > 9) {
-                fieldErrors.push(`Row ${rowNum}: PARAMETER CODE "${paramCode}" exceeds 9 characters (found ${paramCode.length}).`);
+                fieldErrors.push(
+                  `Row ${rowNum}: PARAMETER CODE "${paramCode}" exceeds 9 characters (found ${paramCode.length}).`,
+                );
               }
 
-              const instrument = row[COL_INSTRUMENT]?.toString().trim() ?? "";
+              const instrument =
+                row[COL_INSTRUMENT]?.toString().trim() ?? "";
               if (instrument !== "" && instrument.length > 50) {
-                fieldErrors.push(`Row ${rowNum}: INSTRUMENT "${instrument}" exceeds 5 characters (found ${instrument.length}).`);
+                fieldErrors.push(
+                  `Row ${rowNum}: INSTRUMENT "${instrument}" exceeds 50 characters (found ${instrument.length}).`,
+                );
               }
 
-              const tatDays = row[COL_TAT_DAYS]?.toString().trim() ?? "";
+              const tatDays =
+                row[COL_TAT_DAYS]?.toString().trim() ?? "";
               if (tatDays !== "" && !isInteger(tatDays)) {
-                fieldErrors.push(`Row ${rowNum}: TAT DAYS "${tatDays}" must be a whole number (integer).`);
+                fieldErrors.push(
+                  `Row ${rowNum}: TAT DAYS "${tatDays}" must be a whole number (integer).`,
+                );
               }
 
-              const paramSeq = row[COL_PARAMETER_SEQUENCE]?.toString().trim() ?? "";
+              const paramSeq =
+                row[COL_PARAMETER_SEQUENCE]?.toString().trim() ?? "";
               if (paramSeq !== "" && !isInteger(paramSeq)) {
-                fieldErrors.push(`Row ${rowNum}: PARAMETER SEQUENCE "${paramSeq}" must be a whole number (integer).`);
+                fieldErrors.push(
+                  `Row ${rowNum}: PARAMETER SEQUENCE "${paramSeq}" must be a whole number (integer).`,
+                );
               }
 
-              const sampleAnalysis = row[COL_SAMPLE_QTY_ANALYSIS]?.toString().trim() ?? "";
+              const sampleAnalysis =
+                row[COL_SAMPLE_QTY_ANALYSIS]?.toString().trim() ?? "";
               if (sampleAnalysis !== "" && !isInteger(sampleAnalysis)) {
-                fieldErrors.push(`Row ${rowNum}: SAMPLE QUANTITY (ANALYSIS) "${sampleAnalysis}" must be a whole number (integer).`);
+                fieldErrors.push(
+                  `Row ${rowNum}: SAMPLE QUANTITY (ANALYSIS) "${sampleAnalysis}" must be a whole number (integer).`,
+                );
               }
 
-              const sampleRetention = row[COL_SAMPLE_QTY_RETENTION]?.toString().trim() ?? "";
+              const sampleRetention =
+                row[COL_SAMPLE_QTY_RETENTION]?.toString().trim() ?? "";
               if (sampleRetention !== "" && !isInteger(sampleRetention)) {
-                fieldErrors.push(`Row ${rowNum}: SAMPLE QUANTITY (RETENTION) "${sampleRetention}" must be a whole number (integer).`);
+                fieldErrors.push(
+                  `Row ${rowNum}: SAMPLE QUANTITY (RETENTION) "${sampleRetention}" must be a whole number (integer).`,
+                );
               }
 
-              const indivRate = row[COL_PARAM_INDIVIDUAL_RATE]?.toString().trim() ?? "";
               if (indivRate !== "" && !isFloat(indivRate)) {
-                fieldErrors.push(`Row ${rowNum}: PARAMETER INDIVIDUAL RATE "${indivRate}" must be a valid number (e.g. 12 or 12.50).`);
+                fieldErrors.push(
+                  `Row ${rowNum}: PARAMETER INDIVIDUAL RATE "${indivRate}" must be a valid number (e.g. 12 or 12.50).`,
+                );
               }
 
-              const regRate = row[COL_REGULATORY_RATE_DRUG]?.toString().trim() ?? "";
               if (regRate !== "" && !isFloat(regRate)) {
-                fieldErrors.push(`Row ${rowNum}: REGULATORY RATE (FOR DRUG) "${regRate}" must be a valid number (e.g. 12 or 12.50).`);
+                fieldErrors.push(
+                  `Row ${rowNum}: REGULATORY RATE (FOR DRUG) "${regRate}" must be a valid number (e.g. 12 or 12.50).`,
+                );
               }
             });
 
@@ -902,7 +988,7 @@ export default function ParameterUploader({ employeeId, username, role, onBack }
                           </li>
                           <li className="flex items-center gap-2">
                             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                            All fields above may be left blank (null)
+                            Commodity Name, Parameter Name, Lab Name and Regulation Name are mandatory; Drug also requires both rate fields
                           </li>
                         </ul>
                       </div>

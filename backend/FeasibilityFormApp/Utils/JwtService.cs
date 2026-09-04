@@ -17,14 +17,26 @@ namespace FeasibilityFormApp.Utils
 
         public string GenerateToken(User user)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_config["Jwt:Key"]!)
+            );
+
+            var creds = new SigningCredentials(
+                key,
+                SecurityAlgorithms.HmacSha256
+            );
 
             var claims = new[]
             {
-                new Claim("EmployeeId", user.EmployeeId.ToString()),
-                new Claim("Username", user.Username),
-                new Claim("Role", user.Role),
+                new Claim("EmployeeId", user.EmployeeId ?? ""),
+                new Claim("Username", user.Username ?? ""),
+
+                // Database role information
+                new Claim("RoleCode", user.RoleCode ?? ""),
+                new Claim("Role", user.Role ?? ""),
+
+                // User department
+                new Claim("Department", user.Department ?? "")
             };
 
             var token = new JwtSecurityToken(

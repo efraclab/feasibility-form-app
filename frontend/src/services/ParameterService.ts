@@ -1,13 +1,51 @@
 import axios from 'axios';
 
-import type { ParameterUploadResponse } from '../models/ParameterUploadResponse';
-import type { ParameterData } from '../models/ParameterData';
-import type { ParameterUploadLog } from '../models/ParameterUploadLog';
-import type { ParameterUploadRequest } from '../models/ParameterUploadRequest';
-import type { ParameterUpdateRequest } from '../models/ParameterUpdateRequest';
+import type {
+  ParameterUploadResponse,
+} from '../models/ParameterUploadResponse';
+
+import type {
+  ParameterData,
+} from '../models/ParameterData';
+
+import type {
+  ParameterUploadLog,
+} from '../models/ParameterUploadLog';
+
+import type {
+  ParameterUploadRequest,
+} from '../models/ParameterUploadRequest';
+
+import type {
+  ParameterUpdateRequest,
+} from '../models/ParameterUpdateRequest';
+
 
 const API_BASE_URL =
-  'http://192.168.3.201:5077/api/parameters';
+  'http://192.168.3.250:5077/api/parameters';
+
+
+export interface DropdownOption {
+  code: string;
+  name: string;
+}
+
+
+export interface ParameterDropdownOptions {
+  parameterCodes: DropdownOption[];
+  parameterGroupCodes: DropdownOption[];
+  parameterSubGroupCodes: DropdownOption[];
+  commodityCodes: DropdownOption[];
+  commodityGroupCodes: DropdownOption[];
+  nonFssaiFssaiDrugCodes: DropdownOption[];
+  regulationCodes: DropdownOption[];
+  labCodes: DropdownOption[];
+  unitCodes: DropdownOption[];
+  methodCodes: DropdownOption[];
+  specificationCodes: DropdownOption[];
+  testCodes: DropdownOption[];
+}
+
 
 function getApiErrorMessage(
   error: unknown,
@@ -19,6 +57,7 @@ function getApiErrorMessage(
       : fallbackMessage;
   }
 
+
   console.error('API request failed:', {
     message: error.message,
     code: error.code,
@@ -28,6 +67,7 @@ function getApiErrorMessage(
     requestUrl: error.config?.url,
   });
 
+
   if (!error.response) {
     if (error.code === 'ECONNABORTED') {
       return 'The request timed out. Please try again.';
@@ -35,28 +75,34 @@ function getApiErrorMessage(
 
     return (
       'Could not connect to the server at ' +
-      '192.168.3.201:5077. Check whether the backend is running.'
+      '192.168.3.250:5077. Check whether the backend is running.'
     );
   }
 
+
   const status = error.response.status;
   const data = error.response.data;
+
 
   if (status === 413) {
     return 'The uploaded file is too large for the server.';
   }
 
+
   if (status === 404) {
     return 'The requested API endpoint was not found.';
   }
+
 
   if (status === 401) {
     return 'You are not authorized to perform this action.';
   }
 
+
   if (status === 403) {
     return 'You do not have permission to perform this action.';
   }
+
 
   if (typeof data === 'string') {
     if (data.trim().startsWith('<')) {
@@ -65,6 +111,7 @@ function getApiErrorMessage(
 
     return data.trim() || fallbackMessage;
   }
+
 
   if (data && typeof data === 'object') {
     const responseData = data as {
@@ -76,23 +123,30 @@ function getApiErrorMessage(
       Errors?: string[] | Record<string, string[]>;
     };
 
+
     const message =
       responseData.message ??
       responseData.Message ??
       responseData.title ??
       responseData.Title;
 
+
     const errors =
       responseData.errors ??
       responseData.Errors;
 
+
     let errorDetails = '';
+
 
     if (Array.isArray(errors)) {
       errorDetails = errors
         .filter(Boolean)
         .join('; ');
-    } else if (errors && typeof errors === 'object') {
+    } else if (
+      errors &&
+      typeof errors === 'object'
+    ) {
       errorDetails = Object.entries(errors)
         .flatMap(([field, messages]) => {
           if (Array.isArray(messages)) {
@@ -106,21 +160,26 @@ function getApiErrorMessage(
         .join('; ');
     }
 
+
     if (message && errorDetails) {
       return `${message}: ${errorDetails}`;
     }
 
+
     if (message) {
       return message;
     }
+
 
     if (errorDetails) {
       return errorDetails;
     }
   }
 
+
   return `${fallbackMessage} (HTTP ${status})`;
 }
+
 
 /* =====================================================
    UPLOAD PARAMETERS
@@ -130,7 +189,11 @@ export const uploadParameters = async (
   request: ParameterUploadRequest
 ): Promise<ParameterUploadResponse> => {
   try {
-    console.log('Uploading parameters:', request);
+    console.log(
+      'Uploading parameters:',
+      request
+    );
+
 
     const response =
       await axios.post<ParameterUploadResponse>(
@@ -138,11 +201,13 @@ export const uploadParameters = async (
         request,
         {
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type':
+              'application/json',
           },
           timeout: 300000,
         }
       );
+
 
     return response.data;
   } catch (error: unknown) {
@@ -155,6 +220,7 @@ export const uploadParameters = async (
   }
 };
 
+
 /* =====================================================
    UPDATE PARAMETERS
 ===================================================== */
@@ -163,18 +229,25 @@ export const updateParameters = async (
   request: ParameterUpdateRequest
 ): Promise<string> => {
   try {
-    console.log('Updating parameters:', request);
-
-    const response = await axios.put<string>(
-      API_BASE_URL,
-      request,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        timeout: 300000,
-      }
+    console.log(
+      'Updating parameters:',
+      request
     );
+
+
+    const response =
+      await axios.put<string>(
+        API_BASE_URL,
+        request,
+        {
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+          timeout: 300000,
+        }
+      );
+
 
     return response.data;
   } catch (error: unknown) {
@@ -186,6 +259,7 @@ export const updateParameters = async (
     );
   }
 };
+
 
 /* =====================================================
    GET UPLOAD LOGS
@@ -207,6 +281,7 @@ export const getUploadLogs = async (
         }
       );
 
+
     return response.data;
   } catch (error: unknown) {
     throw new Error(
@@ -217,6 +292,7 @@ export const getUploadLogs = async (
     );
   }
 };
+
 
 /* =====================================================
    SEARCH PARAMETERS
@@ -244,6 +320,7 @@ export const searchParameters = async (
         }
       );
 
+
     return response.data;
   } catch (error: unknown) {
     throw new Error(
@@ -254,6 +331,7 @@ export const searchParameters = async (
     );
   }
 };
+
 
 /* =====================================================
    GET PARAMETERS
@@ -279,6 +357,7 @@ export const getParameters = async (
         }
       );
 
+
     return response.data;
   } catch (error: unknown) {
     throw new Error(
@@ -289,6 +368,77 @@ export const getParameters = async (
     );
   }
 };
+
+
+/* =====================================================
+   DROPDOWN OPTIONS
+===================================================== */
+
+export const getDropdownOptions =
+  async (): Promise<ParameterDropdownOptions> => {
+    try {
+      const response =
+        await axios.get<ParameterDropdownOptions>(
+          `${API_BASE_URL}/dropdown-options`,
+          {
+            timeout: 300000,
+          }
+        );
+
+
+      return response.data;
+    } catch (error: unknown) {
+      throw new Error(
+        getApiErrorMessage(
+          error,
+          'Failed to fetch dropdown options'
+        )
+      );
+    }
+  };
+
+
+export interface WorkflowTrackerItem {
+  stage: 'Quotation' | 'Lab' | 'Reviewer' | 'Admin';
+  status: string;
+  userId?: string | null;
+  userName?: string | null;
+  actionAt?: string | null;
+  change?: string | null;
+  remarks?: string | null;
+}
+
+export interface WorkflowTrackerResponse {
+  batchId: number;
+  currentStage?: string | null;
+  workflowStatus?: string | null;
+  lastActionBy?: string | null;
+  lastActionAt?: string | null;
+  workflowRemarks?: string | null;
+  history: WorkflowTrackerItem[];
+}
+
+export const getWorkflowTracker = async (
+  batchId: number
+): Promise<WorkflowTrackerResponse> => {
+  try {
+    const response =
+      await axios.get<WorkflowTrackerResponse>(
+        `${API_BASE_URL}/workflow/${batchId}/tracker`,
+        { timeout: 300000 }
+      );
+
+    return response.data;
+  } catch (error: unknown) {
+    throw new Error(
+      getApiErrorMessage(
+        error,
+        'Failed to fetch workflow tracker'
+      )
+    );
+  }
+};
+
 
 /* =====================================================
    UPLOAD TO MASTER TABLES
@@ -303,12 +453,53 @@ export const uploadToMaster = async (
       `Uploading batch ${batchId} to master tables`
     );
 
+
     const response =
       await axios.post<ParameterUploadResponse>(
         `${API_BASE_URL}/upload-to-master/${batchId}`,
         {
           uploadedBy,
         },
+        {
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+          timeout: 300000,
+        }
+      );
+
+
+    return response.data;
+  } catch (error: unknown) {
+    throw new Error(
+      getApiErrorMessage(
+        error,
+        'Failed to upload parameters to master tables'
+      )
+    );
+  }
+};
+
+
+/* =====================================================
+   SUBMIT QUOTATION BATCH TO LAB
+===================================================== */
+
+export interface SubmitToLabRequest {
+  userId: string;
+  remarks?: string | null;
+}
+
+export const submitToLab = async (
+  batchId: number,
+  request: SubmitToLabRequest
+): Promise<ParameterUploadResponse> => {
+  try {
+    const response =
+      await axios.post<ParameterUploadResponse>(
+        `${API_BASE_URL}/workflow/${batchId}/submit-to-lab`,
+        request,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -322,11 +513,88 @@ export const uploadToMaster = async (
     throw new Error(
       getApiErrorMessage(
         error,
-        'Failed to upload parameters to master tables'
+        'Failed to submit batch to Lab'
       )
     );
   }
 };
+
+
+/* =====================================================
+   SUBMIT LAB BATCH TO REVIEWER
+===================================================== */
+
+export interface SubmitToReviewerRequest {
+  userId: string;
+  remarks?: string | null;
+}
+
+export const submitToReviewer = async (
+  batchId: number,
+  request: SubmitToReviewerRequest
+): Promise<ParameterUploadResponse> => {
+  try {
+    const response =
+      await axios.post<ParameterUploadResponse>(
+        `${API_BASE_URL}/workflow/${batchId}/submit-to-reviewer`,
+        request,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 300000,
+        }
+      );
+
+    return response.data;
+  } catch (error: unknown) {
+    throw new Error(
+      getApiErrorMessage(
+        error,
+        'Failed to submit batch to Reviewer'
+      )
+    );
+  }
+};
+
+
+/* =====================================================
+   SUBMIT REVIEWER BATCH TO ADMIN
+===================================================== */
+
+export interface SubmitToAdminRequest {
+  userId: string;
+  remarks?: string | null;
+}
+
+export const submitToAdmin = async (
+  batchId: number,
+  request: SubmitToAdminRequest
+): Promise<ParameterUploadResponse> => {
+  try {
+    const response =
+      await axios.post<ParameterUploadResponse>(
+        `${API_BASE_URL}/workflow/${batchId}/submit-to-admin`,
+        request,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 300000,
+        }
+      );
+
+    return response.data;
+  } catch (error: unknown) {
+    throw new Error(
+      getApiErrorMessage(
+        error,
+        'Failed to submit batch to Admin'
+      )
+    );
+  }
+};
+
 
 /* =====================================================
    CONVERT EXCEL ROW
@@ -346,7 +614,8 @@ export const convertExcelRowToParameter = (
       row['PARAMETER GROUP'] || null,
 
     parameterGroupCode:
-      row['PARAMETER GROUP CODE'] || null,
+      row['PARAMETER GROUP CODE'] ||
+      null,
 
     parameterSubGroup:
       row['PARAMETER SUB-GROUP']
@@ -369,11 +638,18 @@ export const convertExcelRowToParameter = (
     commodityGroup:
       row['COMMODITY GROUP'] || null,
 
+    commodityGroupCode:
+      row['COMMODITY GROUP CODE'] ||
+      null,
+
     nonFssaiFssaiDrug:
-      row['NON FSSAI/FSSAI/DRUG'] || null,
+      row['NON FSSAI/FSSAI/DRUG'] ||
+      null,
 
     nonFssaiFssaiDrugCode:
-      row['NON FSSAI/FSSAI/DRUG CODE'] || null,
+      row[
+        'NON FSSAI/FSSAI/DRUG CODE'
+      ] || null,
 
     regulationName:
       row['REGULATION NAME'] || null,
@@ -381,16 +657,34 @@ export const convertExcelRowToParameter = (
     regulationCode:
       row['REGULATION CODE'] || null,
 
+    // Quotation template now has a separate LAB NAME column.
+    // ParameterData currently stores the selected lab name in
+    // parameterLabDistribution, so prefer LAB NAME and keep the
+    // original Parameter Lab Distribution column as a fallback for
+    // older/existing Excel files.
     parameterLabDistribution:
+      row['LAB NAME']
+        ?.toString()
+        .replace(/\n/g, ' ')
+        .trim() ||
+      row[
+        'PARAMETER LAB DISTRIBUTION (FDS/MT/RA/MB/WTR/ENV/GAS)'
+      ]
+        ?.toString()
+        .replace(/\n/g, ' ')
+        .trim() ||
       row[
         'PARAMETER LAB DISTRIBUTION\n(FDS/MT/RA/MB/WTR/ENV/GAS)'
       ]
         ?.toString()
         .replace(/\n/g, ' ')
-        .trim() || null,
+        .trim() ||
+      null,
 
     labCode:
-      row['LAB CODE'] || null,
+      row['LAB CODE']
+        ?.toString()
+        .trim() || null,
 
     tatDays:
       row['TAT DAYS'] ?? null,
@@ -412,8 +706,9 @@ export const convertExcelRowToParameter = (
       ] ?? null,
 
     requiredSampleQuantityUnit:
-      row['REQUIRED SAMPLE QUANTITY (UNIT)'] ||
-      null,
+      row[
+        'REQUIRED SAMPLE QUANTITY (UNIT)'
+      ] || null,
 
     unitCode:
       row['UNIT CODE'] || null,
@@ -441,7 +736,8 @@ export const convertExcelRowToParameter = (
       null,
 
     specificationCode:
-      row['SPECIFICATION CODE'] || null,
+      row['SPECIFICATION CODE'] ||
+      null,
 
     fssaiCategoryNo:
       row['FSSAICatagoryNo'] || null,
@@ -462,16 +758,24 @@ export const convertExcelRowToParameter = (
       row['LOQ'] ?? null,
 
     parameterIndividualRate:
+      row['PARAMETER INDIVIDUAL RATE']
+        ?.toString()
+        .trim() ||
       row['PARAMETER INDIVIDUAL\nRATE']
         ?.toString()
         .replace(/\n/g, ' ')
-        .trim() || null,
+        .trim() ||
+      null,
 
     regulatoryRateDrug:
+      row['REGULATORY RATE (FOR DRUG)']
+        ?.toString()
+        .trim() ||
       row['REGULATORY RATE\n (FOR DRUG)']
         ?.toString()
         .replace(/\n/g, ' ')
-        .trim() || null,
+        .trim() ||
+      null,
 
     uploadedAt:
       row['UploadDate'] || null,
