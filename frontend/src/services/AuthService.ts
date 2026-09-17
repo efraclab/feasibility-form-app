@@ -2,7 +2,7 @@ import axios from "axios";
 import type { LoginRequest } from "../models/LoginRequest";
 import type { LoginResponse } from "../models/LoginResponse";
 
-const API_BASE_URL = 'http://192.168.3.250:5077/api';
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
 export async function login(
   payload: LoginRequest

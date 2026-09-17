@@ -422,6 +422,163 @@ namespace FeasibilityFormApp.Controllers
         }
 
         // ============================================================
+        // REVERT FINAL MASTER UPLOAD
+        // ============================================================
+        [HttpPost("revert-master-upload/{batchId}")]
+        public async Task<IActionResult> RevertMasterUpload(
+            long batchId,
+            [FromBody] RevertMasterUploadRequest request
+        )
+        {
+            try
+            {
+                if (batchId <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        status = "Failed",
+                        message = "Valid BatchId is required"
+                    });
+                }
+
+                if (request == null ||
+                    string.IsNullOrWhiteSpace(request.UserId))
+                {
+                    return BadRequest(new
+                    {
+                        status = "Failed",
+                        message = "UserId is required"
+                    });
+                }
+
+                if (!string.Equals(
+                        request.UserId.Trim(),
+                        "admin",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return StatusCode(
+                        StatusCodes.Status403Forbidden,
+                        new
+                        {
+                            status = "Failed",
+                            message = "Only Admin can revert the final master upload."
+                        }
+                    );
+                }
+
+                var result =
+                    await _parameterService.RevertMasterUploadAsync(
+                        batchId,
+                        request.UserId.Trim()
+                    );
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error reverting final master upload for Batch {BatchId}",
+                    batchId
+                );
+
+                return BadRequest(new
+                {
+                    status = "Failed",
+                    message = ex.Message
+                });
+            }
+        }
+
+        public class RevertMasterUploadRequest
+        {
+            public string UserId { get; set; } = string.Empty;
+        }
+
+
+        // ============================================================
+        // ADMIN SENDS REVERTED BATCH BACK TO REVIEWER
+        // ============================================================
+        [HttpPost("workflow/{batchId}/send-back-to-reviewer")]
+        public async Task<IActionResult> SendBackToReviewer(
+            long batchId,
+            [FromBody] SendBackToReviewerRequest request
+        )
+        {
+            try
+            {
+                if (batchId <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        status = "Failed",
+                        message = "Valid BatchId is required"
+                    });
+                }
+
+                if (request == null ||
+                    string.IsNullOrWhiteSpace(request.UserId))
+                {
+                    return BadRequest(new
+                    {
+                        status = "Failed",
+                        message = "UserId is required"
+                    });
+                }
+
+                if (!string.Equals(
+                        request.UserId.Trim(),
+                        "admin",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return StatusCode(
+                        StatusCodes.Status403Forbidden,
+                        new
+                        {
+                            status = "Failed",
+                            message = "Only Admin can send a reverted batch back to Reviewer."
+                        }
+                    );
+                }
+
+                var userSystem =
+                    HttpContext.Connection.RemoteIpAddress?.ToString()
+                    ?? "FeasibilityFormApp";
+
+                var result =
+                    await _parameterService.SendBackToReviewerAsync(
+                        batchId,
+                        request.UserId.Trim(),
+                        userSystem,
+                        request.Remarks
+                    );
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error sending reverted batch {BatchId} back to Reviewer",
+                    batchId
+                );
+
+                return BadRequest(new
+                {
+                    status = "Failed",
+                    message = ex.Message
+                });
+            }
+        }
+
+        public class SendBackToReviewerRequest
+        {
+            public string UserId { get; set; } = string.Empty;
+            public string? Remarks { get; set; }
+        }
+
+
+        // ============================================================
         // WORKFLOW TRACKER
         // ============================================================
         [HttpGet("workflow/{batchId}/tracker")]

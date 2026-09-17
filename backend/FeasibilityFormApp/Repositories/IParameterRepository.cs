@@ -33,6 +33,18 @@ namespace FeasibilityFormApp.Repositories
             string uploadedBy
         );
 
+        Task<ParameterUploadResponse> RevertMasterUploadAsync(
+            long batchId,
+            string revertedBy
+        );
+
+        Task<ParameterUploadResponse> SendBackToReviewerAsync(
+            long batchId,
+            string userId,
+            string? userSystem,
+            string? remarks
+        );
+
         Task<ParameterDropdownOptions> GetDropdownOptionsAsync();
 
         Task<WorkflowTrackerResponse?> GetWorkflowTrackerAsync(

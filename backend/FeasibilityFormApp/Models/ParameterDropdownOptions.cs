@@ -43,5 +43,8 @@ public class ParameterDropdownOptions
 
     public IEnumerable<ParameterDropdownOption> TestCodes { get; set; }
         = new List<ParameterDropdownOption>();
+
+    public IEnumerable<ParameterDropdownOption> LoqOptions { get; set; }
+        = new List<ParameterDropdownOption>();
 }
 }

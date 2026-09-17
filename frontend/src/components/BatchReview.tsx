@@ -3,6 +3,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 
 import {
   ChevronLeft,
@@ -35,6 +36,8 @@ import {
   submitToReviewer,
   submitToAdmin,
   uploadToMaster,
+  revertMasterUpload,
+  sendBackToReviewer,
   updateParameters,
 } from "../services/ParameterService";
 
@@ -110,6 +113,8 @@ interface ConfirmationDialog {
   | "submitReviewer"
   | "submitAdmin"
   | "uploadMaster"
+  | "revertMaster"
+  | "sendBackReviewer"
   | null;
   title: string;
   message: string;
@@ -148,6 +153,7 @@ const EMPTY_DROPDOWN_OPTIONS: ParameterDropdownOptions = {
   methodCodes: [],
   specificationCodes: [],
   testCodes: [],
+  loqOptions: [],
 };
 
 
@@ -486,6 +492,24 @@ const LAB_AUTO_CODE_FIELDS = new Set<string>([
   "unitCode",
 ]);
 
+// Mandatory fields highlighted for Lab users.
+const LAB_MANDATORY_FIELDS = new Set<string>([
+  "parameterGroup",
+  "parameterGroupCode",
+  "methodName",
+  "specificationName",
+  "testUnit",
+  "loq",
+  "sampleQuantityAnalysis",
+  "sampleQuantityRetention",
+  "requiredSampleQuantityUnit",
+  "nablScopeStatus",
+  "nonFssaiFssaiDrug",
+  "fssaiCategoryNo",
+  "subClause",
+  "instrument",
+]);
+
 const QUOTATION_NAME_DROPDOWNS = {
   commodityName: {
     optionsKey: "commodityCodes",
@@ -510,6 +534,7 @@ interface SearchableNameDropdownProps {
   options: DropdownOption[];
   placeholder: string;
   disabled?: boolean;
+  highlightRequired?: boolean;
   onSelect: (name: string) => void;
 }
 
@@ -518,11 +543,20 @@ function SearchableNameDropdown({
   options,
   placeholder,
   disabled = false,
+  highlightRequired = false,
   onSelect,
 }: SearchableNameDropdownProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [searchText, setSearchText] = useState(value || "");
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownRect, setDropdownRect] = useState<DOMRect | null>(null);
+
+  const openDropdown = () => {
+    if (wrapperRef.current) {
+      setDropdownRect(wrapperRef.current.getBoundingClientRect());
+    }
+    setIsOpen(true);
+  };
 
   useEffect(() => {
     setSearchText(value || "");
@@ -555,16 +589,28 @@ function SearchableNameDropdown({
 
   const filteredOptions = options
     .filter((option) => {
-      if (!normalizedSearch) {
-        return true;
-      }
+      if (!normalizedSearch) return true;
 
-      return (
-        option.name.toLowerCase().includes(normalizedSearch) ||
-        option.code.toLowerCase().includes(normalizedSearch)
-      );
+      const name = String(option.name ?? "").trim().toLowerCase();
+      const code = String(option.code ?? "").trim().toLowerCase();
+
+      return name.includes(normalizedSearch) || code.includes(normalizedSearch);
     })
-    .slice(0, 100);
+    .sort((a, b) => {
+      if (!normalizedSearch) return 0;
+
+      const aName = String(a.name ?? "").trim().toLowerCase();
+      const bName = String(b.name ?? "").trim().toLowerCase();
+      const aCode = String(a.code ?? "").trim().toLowerCase();
+      const bCode = String(b.code ?? "").trim().toLowerCase();
+
+      const aStarts = aName.startsWith(normalizedSearch) || aCode.startsWith(normalizedSearch);
+      const bStarts = bName.startsWith(normalizedSearch) || bCode.startsWith(normalizedSearch);
+
+      if (aStarts !== bStarts) return aStarts ? -1 : 1;
+      return aName.localeCompare(bName);
+    })
+    .slice(0, 10);
 
   return (
     <div
@@ -577,36 +623,49 @@ function SearchableNameDropdown({
           value={searchText}
           disabled={disabled}
           placeholder={placeholder}
-          onFocus={() => setIsOpen(true)}
+          onFocus={openDropdown}
           onChange={(e) => {
             const nextValue = e.target.value;
             setSearchText(nextValue);
-            setIsOpen(true);
+            openDropdown();
 
             if (nextValue === "") {
               onSelect("");
             }
           }}
-          className="w-full px-2 py-1 pr-8 text-sm outline-none border rounded-md bg-white border-slate-300 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-slate-100"
+          className={`w-full px-2 py-1 pr-8 text-sm outline-none border rounded-md focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-slate-100 ${highlightRequired
+            ? "bg-yellow-50 border-yellow-300"
+            : "bg-white border-slate-300"
+            }`}
         />
 
         <button
           type="button"
           tabIndex={-1}
           disabled={disabled}
-          onClick={() => setIsOpen((current) => !current)}
+          onClick={() => {
+            if (isOpen) setIsOpen(false);
+            else openDropdown();
+          }}
           className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-700 disabled:cursor-not-allowed"
         >
           <ChevronDown
-            className={`w-4 h-4 transition-transform ${
-              isOpen ? "rotate-180" : ""
-            }`}
+            className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""
+              }`}
           />
         </button>
       </div>
 
-      {isOpen && !disabled && (
-        <div className="absolute z-[80] left-0 right-0 mt-1 max-h-64 overflow-y-auto overflow-x-hidden rounded-md border border-slate-200 bg-white shadow-xl">
+      {isOpen && !disabled && dropdownRect && createPortal(
+        <div
+          onMouseDown={(e) => e.stopPropagation()}
+          className="fixed z-[10000] max-h-[420px] overflow-y-auto overflow-x-hidden rounded-md border border-slate-200 bg-white shadow-xl"
+          style={{
+            left: dropdownRect.left,
+            top: dropdownRect.bottom + 4,
+            width: dropdownRect.width,
+          }}
+        >
           {filteredOptions.length > 0 ? (
             filteredOptions.map((option) => (
               <button
@@ -634,7 +693,159 @@ function SearchableNameDropdown({
               No matching result found
             </div>
           )}
-        </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
+
+
+
+interface SearchableSuggestionInputProps {
+  value: string;
+  options: DropdownOption[];
+  placeholder: string;
+  disabled?: boolean;
+  highlightRequired?: boolean;
+  onChange: (value: string) => void;
+}
+
+function SearchableSuggestionInput({
+  value,
+  options,
+  placeholder,
+  disabled = false,
+  highlightRequired = false,
+  onChange,
+}: SearchableSuggestionInputProps) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [dropdownRect, setDropdownRect] = useState<DOMRect | null>(null);
+
+  const openDropdown = () => {
+    if (wrapperRef.current) {
+      setDropdownRect(wrapperRef.current.getBoundingClientRect());
+    }
+    setIsOpen(true);
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
+  const normalizedSearch = String(value ?? "").trim().toLowerCase();
+
+  const filteredOptions = options
+    .filter((option) => {
+      if (!normalizedSearch) return true;
+
+      const name = String(option.name ?? "").trim().toLowerCase();
+      const code = String(option.code ?? "").trim().toLowerCase();
+
+      return name.includes(normalizedSearch) || code.includes(normalizedSearch);
+    })
+    .sort((a, b) => {
+      if (!normalizedSearch) return 0;
+
+      const aName = String(a.name ?? "").trim().toLowerCase();
+      const bName = String(b.name ?? "").trim().toLowerCase();
+      const aCode = String(a.code ?? "").trim().toLowerCase();
+      const bCode = String(b.code ?? "").trim().toLowerCase();
+
+      const aStarts = aName.startsWith(normalizedSearch) || aCode.startsWith(normalizedSearch);
+      const bStarts = bName.startsWith(normalizedSearch) || bCode.startsWith(normalizedSearch);
+
+      if (aStarts !== bStarts) return aStarts ? -1 : 1;
+      return aName.localeCompare(bName);
+    })
+    .slice(0, 10);
+
+  return (
+    <div
+      ref={wrapperRef}
+      className="relative min-w-[170px] w-full"
+    >
+      <div className="relative">
+        <input
+          type="text"
+          value={value}
+          disabled={disabled}
+          placeholder={placeholder}
+          onFocus={openDropdown}
+          onChange={(e) => {
+            onChange(e.target.value);
+            openDropdown();
+          }}
+          className={`w-full px-2 py-1 pr-8 text-sm outline-none border rounded-md focus:ring-1 disabled:bg-slate-100 ${highlightRequired
+            ? "bg-yellow-50 border-yellow-300 focus:ring-amber-500 focus:border-amber-500"
+            : "bg-white border-slate-300 focus:ring-blue-500 focus:border-blue-500"
+            }`}
+        />
+
+        <button
+          type="button"
+          tabIndex={-1}
+          disabled={disabled}
+          onClick={() => {
+            if (isOpen) setIsOpen(false);
+            else openDropdown();
+          }}
+          className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-700 disabled:cursor-not-allowed"
+        >
+          <ChevronDown
+            className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""
+              }`}
+          />
+        </button>
+      </div>
+
+      {isOpen && !disabled && dropdownRect && createPortal(
+        <div
+          onMouseDown={(e) => e.stopPropagation()}
+          className="fixed z-[10000] max-h-[420px] overflow-y-auto overflow-x-hidden rounded-md border border-slate-200 bg-white shadow-xl"
+          style={{
+            left: dropdownRect.left,
+            top: dropdownRect.bottom + 4,
+            width: dropdownRect.width,
+          }}
+        >
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((option) => (
+              <button
+                key={`loq-${option.code}-${option.name}`}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onChange(option.name);
+                  setIsOpen(false);
+                }}
+                className="w-full px-3 py-2 text-left whitespace-normal break-words hover:bg-amber-50 border-b border-slate-100 last:border-b-0"
+              >
+                <div className="text-sm font-medium text-slate-800">
+                  {option.name}
+                </div>
+              </button>
+            ))
+          ) : (
+            <div className="px-3 py-3 text-sm text-slate-500">
+              No matching suggestion. You can keep the typed LOQ value.
+            </div>
+          )}
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -826,6 +1037,11 @@ export default function BatchReview({
   ] = useState<string | null>(null);
 
   const [
+    workflowRemarks,
+    setWorkflowRemarks,
+  ] = useState<string | null>(null);
+
+  const [
     workflowLoading,
     setWorkflowLoading,
   ] = useState(false);
@@ -853,6 +1069,16 @@ export default function BatchReview({
   const [
     uploadToMasterLoading,
     setUploadToMasterLoading,
+  ] = useState(false);
+
+  const [
+    revertMasterLoading,
+    setRevertMasterLoading,
+  ] = useState(false);
+
+  const [
+    sendBackReviewerLoading,
+    setSendBackReviewerLoading,
   ] = useState(false);
 
   const [
@@ -1326,6 +1552,62 @@ export default function BatchReview({
               const completed =
                 completedMap.get(stage);
 
+              if (
+                stage === currentStage &&
+                data.workflowStatus !== "Completed"
+              ) {
+                let currentUserId:
+                  | string
+                  | undefined;
+
+                let currentUserName:
+                  | string
+                  | undefined;
+
+                if (
+                  stage === "Quotation" &&
+                  quotationStarted
+                ) {
+                  currentUserId =
+                    quotationStarted.userId ||
+                    undefined;
+                  currentUserName =
+                    quotationStarted.userName ||
+                    undefined;
+                } else if (
+                  (stage === "Quotation" &&
+                    isQuotation()) ||
+                  (stage === "Lab" &&
+                    isLab()) ||
+                  (stage === "Reviewer" &&
+                    isReviewer()) ||
+                  (stage === "Admin" &&
+                    isAdmin())
+                ) {
+                  currentUserId =
+                    employeeId || undefined;
+                  currentUserName =
+                    username || undefined;
+                } else if (
+                  stage === "Reviewer"
+                ) {
+                  currentUserId = "reviewer1";
+                  currentUserName = "Reviewer 1";
+                } else if (
+                  stage === "Admin"
+                ) {
+                  currentUserId = "admin";
+                  currentUserName = "Admin";
+                }
+
+                return {
+                  stage,
+                  status: "Current",
+                  userId: currentUserId,
+                  userName: currentUserName,
+                };
+              }
+
               if (completed) {
                 return {
                   stage,
@@ -1391,7 +1673,7 @@ export default function BatchReview({
                 stage,
                 status:
                   currentIndex >= 0 &&
-                  index < currentIndex
+                    index < currentIndex
                     ? "Completed"
                     : "Waiting",
               };
@@ -1724,35 +2006,6 @@ export default function BatchReview({
         errors.push(`Row ${row}: Regulation Name is required.`);
       }
 
-      const drugCode = String(param.nonFssaiFssaiDrugCode ?? "")
-        .trim()
-        .toUpperCase();
-      const drugName = String(param.nonFssaiFssaiDrug ?? "")
-        .trim()
-        .toUpperCase();
-      const isDrugRow = drugCode === "003" || drugName === "DRUG";
-
-      if (isDrugRow) {
-        if (
-          param.parameterIndividualRate === null ||
-          param.parameterIndividualRate === undefined ||
-          String(param.parameterIndividualRate).trim() === ""
-        ) {
-          errors.push(
-            `Row ${row}: Parameter Individual Rate is required for Drug.`
-          );
-        }
-
-        if (
-          param.regulatoryRateDrug === null ||
-          param.regulatoryRateDrug === undefined ||
-          String(param.regulatoryRateDrug).trim() === ""
-        ) {
-          errors.push(
-            `Row ${row}: Regulatory Rate Drug is required for Drug.`
-          );
-        }
-      }
     });
 
     if (errors.length > 0) {
@@ -1760,9 +2013,8 @@ export default function BatchReview({
         "error",
         errors.length === 1
           ? errors[0]
-          : `${errors[0]} (+${errors.length - 1} more validation error${
-              errors.length - 1 === 1 ? "" : "s"
-            })`
+          : `${errors[0]} (+${errors.length - 1} more validation error${errors.length - 1 === 1 ? "" : "s"
+          })`
       );
       return false;
     }
@@ -1792,7 +2044,9 @@ export default function BatchReview({
         | "submitLab"
         | "submitReviewer"
         | "submitAdmin"
-        | "uploadMaster",
+        | "uploadMaster"
+        | "revertMaster"
+        | "sendBackReviewer", // ADD THIS
       onConfirm: () => void
     ) => {
       const configs = {
@@ -1875,6 +2129,24 @@ export default function BatchReview({
             `Are you sure you want to perform the final upload for Batch #${batchId}? All approved parameter data will be written to the master tables and the workflow will be completed.`,
           confirmText:
             "Upload to Master",
+        },
+
+        revertMaster: {
+          title:
+            "Revert Final Upload",
+          message:
+            `Are you sure you want to revert the final master upload for Batch #${batchId}? Only master rows recorded as newly created by this batch will be removed. The batch will return to Admin / Pending so it can be edited and uploaded again.`,
+          confirmText:
+            "Revert Final Upload",
+        },
+
+        sendBackReviewer: {
+          title:
+            "Send Back to Reviewer",
+          message:
+            `Send reverted Batch #${batchId} back to Reviewer? The restored parameter data will stay in the buffer and the workflow will move from Admin / Pending to Reviewer / Pending.`,
+          confirmText:
+            "Send to Reviewer",
         },
       };
 
@@ -2575,21 +2847,21 @@ export default function BatchReview({
         label: string;
         value: unknown;
       }> = [
-        { label: "Parameter Group", value: row.parameterGroup },
-        { label: "Parameter Group Code", value: row.parameterGroupCode },
-        { label: "Method Name", value: row.methodName },
-        { label: "Specification Name", value: row.specificationName },
-        { label: "Test Unit", value: row.testUnit },
-        { label: "LOQ", value: row.loq },
-        { label: "Sample Quantity Analysis", value: row.sampleQuantityAnalysis },
-        { label: "Sample Quantity Retention", value: row.sampleQuantityRetention },
-        { label: "Required Sample Quantity Unit", value: row.requiredSampleQuantityUnit },
-        { label: "NABL Scope Status", value: row.nablScopeStatus },
-        { label: "Non FSSAI/FSSAI/Drug", value: row.nonFssaiFssaiDrug },
-        { label: "FSSAI Category No", value: row.fssaiCategoryNo },
-        { label: "Sub Clause", value: row.subClause },
-        { label: "Instrument", value: row.instrument },
-      ];
+          { label: "Parameter Group", value: row.parameterGroup },
+          { label: "Parameter Group Code", value: row.parameterGroupCode },
+          { label: "Method Name", value: row.methodName },
+          { label: "Specification Name", value: row.specificationName },
+          { label: "Test Unit", value: row.testUnit },
+          { label: "LOQ", value: row.loq },
+          { label: "Sample Quantity Analysis", value: row.sampleQuantityAnalysis },
+          { label: "Sample Quantity Retention", value: row.sampleQuantityRetention },
+          { label: "Required Sample Quantity Unit", value: row.requiredSampleQuantityUnit },
+          { label: "NABL Scope Status", value: row.nablScopeStatus },
+          { label: "Non FSSAI/FSSAI/Drug", value: row.nonFssaiFssaiDrug },
+          { label: "FSSAI Category No", value: row.fssaiCategoryNo },
+          { label: "Sub Clause", value: row.subClause },
+          { label: "Instrument", value: row.instrument },
+        ];
 
       requiredFields.forEach(({ label, value }) => {
         if (isBlank(value)) {
@@ -2636,11 +2908,10 @@ export default function BatchReview({
           "warning",
           `Please complete all mandatory Lab fields. ${labValidationErrors
             .slice(0, 3)
-            .join("; ")}${
-              labValidationErrors.length > 3
-                ? `; +${labValidationErrors.length - 3} more`
-                : ""
-            }`
+            .join("; ")}${labValidationErrors.length > 3
+              ? `; +${labValidationErrors.length - 3} more`
+              : ""
+          }`
         );
         return;
       }
@@ -2872,6 +3143,138 @@ export default function BatchReview({
     };
 
 
+  const handleRevertMasterUpload =
+    () => {
+      if (
+        !isAdmin() ||
+        workflowStage !== "Admin" ||
+        workflowStatus !== "Completed"
+      ) {
+        showToast(
+          "warning",
+          "Only a completed Admin master upload can be reverted."
+        );
+        return;
+      }
+
+      openConfirmDialog(
+        "revertMaster",
+        async () => {
+          try {
+            setActionLoading(true);
+            setRevertMasterLoading(true);
+
+            const response =
+              await revertMasterUpload(
+                batchId,
+                employeeId
+              );
+
+            closeConfirmDialog();
+
+            showToast(
+              "success",
+              response.message ||
+              `Batch ${batchId} final upload reverted successfully.`
+            );
+
+            await loadWorkflowData();
+            await loadWorkflowTracker();
+            await loadBatchData();
+          } catch (error) {
+            console.error(
+              "Error reverting final master upload:",
+              error
+            );
+
+            showToast(
+              "error",
+              error instanceof Error
+                ? error.message
+                : "Failed to revert final master upload."
+            );
+
+            setActionLoading(false);
+          } finally {
+            setRevertMasterLoading(false);
+          }
+        }
+      );
+    };
+
+
+  const canSendBackToReviewer =
+    () =>
+      isAdmin() &&
+      !isEditMode &&
+      !hasChanges &&
+      !workflowLoading &&
+      workflowStage === "Admin" &&
+      workflowStatus === "Pending";
+  (workflowRemarks ?? "").trim().toLowerCase() ===
+    "final master upload reverted by admin";
+
+
+  const handleSendBackToReviewer =
+    () => {
+      if (!canSendBackToReviewer()) {
+        showToast(
+          "warning",
+          "Only a reverted Admin / Pending batch can be sent back to Reviewer."
+        );
+        return;
+      }
+
+      openConfirmDialog(
+        "sendBackReviewer",
+        async () => {
+          try {
+            setActionLoading(true);
+            setSendBackReviewerLoading(true);
+
+            const response =
+              await sendBackToReviewer(
+                batchId,
+                {
+                  userId: employeeId,
+                  remarks:
+                    "Admin sent reverted batch back to Reviewer",
+                }
+              );
+
+            closeConfirmDialog();
+
+            showToast(
+              "success",
+              response.message ||
+              `Batch ${batchId} sent back to Reviewer successfully.`
+            );
+
+            await loadWorkflowData();
+            await loadWorkflowTracker();
+            await loadBatchData();
+          } catch (error) {
+            console.error(
+              "Error sending batch back to Reviewer:",
+              error
+            );
+
+            showToast(
+              "error",
+              error instanceof Error
+                ? error.message
+                : "Failed to send batch back to Reviewer."
+            );
+
+            setActionLoading(false);
+          } finally {
+            setSendBackReviewerLoading(false);
+          }
+        }
+      );
+    };
+
+
   const handleCloseBatch =
     () => {
       if (hasChanges) {
@@ -2967,6 +3370,7 @@ export default function BatchReview({
             value={String(param[key] ?? "")}
             options={options}
             disabled={dropdownLoading}
+            highlightRequired={isQuotation()}
             placeholder={
               dropdownLoading
                 ? "Loading..."
@@ -3008,6 +3412,10 @@ export default function BatchReview({
             value={String(param[key] ?? "")}
             options={options}
             disabled={dropdownLoading}
+            highlightRequired={
+              isLab() &&
+              LAB_MANDATORY_FIELDS.has(keyName)
+            }
             placeholder={
               dropdownLoading
                 ? "Loading..."
@@ -3034,7 +3442,10 @@ export default function BatchReview({
             type="text"
             value={String(param[key] ?? "")}
             readOnly
-            className="min-w-[170px] w-full px-2 py-1 text-sm outline-none border rounded-md bg-slate-100 text-slate-600 border-slate-200 cursor-not-allowed"
+            className={`min-w-[170px] w-full px-2 py-1 text-sm outline-none border rounded-md cursor-not-allowed ${LAB_MANDATORY_FIELDS.has(keyName)
+              ? "bg-yellow-50 text-slate-700 border-yellow-300"
+              : "bg-slate-100 text-slate-600 border-slate-200"
+              }`}
           />
         );
       }
@@ -3048,18 +3459,25 @@ export default function BatchReview({
       // ------------------------------------------------------------
       if (isQuotation()) {
         const quotationEditable = QUOTATION_EDITABLE_FIELDS.has(keyName);
+        const drugCode = String(param.nonFssaiFssaiDrugCode ?? "").trim().toUpperCase();
+        const drugName = String(param.nonFssaiFssaiDrug ?? "").trim().toUpperCase();
+        const isDrugRow = drugCode === "003" || drugName === "DRUG";
+        const isMandatoryQuotationRate =
+          isDrugRow &&
+          (keyName === "parameterIndividualRate" ||
+            keyName === "regulatoryRateDrug");
 
         return (
           <input
             type={
               keyName === "parameterIndividualRate" ||
-              keyName === "regulatoryRateDrug"
+                keyName === "regulatoryRateDrug"
                 ? "number"
                 : "text"
             }
             step={
               keyName === "parameterIndividualRate" ||
-              keyName === "regulatoryRateDrug"
+                keyName === "regulatoryRateDrug"
                 ? "any"
                 : undefined
             }
@@ -3072,13 +3490,48 @@ export default function BatchReview({
             className={`
               min-w-[170px] w-full px-2 py-1 text-sm outline-none border rounded-md transition-all
               ${quotationEditable
-                ? "bg-white border-slate-300 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                ? isMandatoryQuotationRate
+                  ? "bg-yellow-50 border-yellow-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
+                  : "bg-white border-slate-300 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                 : "bg-slate-100 text-slate-600 border-slate-200 cursor-not-allowed"
               }
             `}
           />
         );
       }
+
+      // ------------------------------------------------------------
+      // LOQ SEARCHABLE SUGGESTION BOX
+      // Suggestions come from SpecificationMst.SpecLOQ.
+      // Free typing remains allowed because LOQ contains numeric,
+      // range and qualitative values.
+      // ------------------------------------------------------------
+      if (
+        keyName === "loq" &&
+        (isLab() || isReviewer() || isAdmin())
+      ) {
+        return (
+          <SearchableSuggestionInput
+            value={String(param[key] ?? "")}
+            options={dropdownOptions.loqOptions}
+            disabled={dropdownLoading}
+            highlightRequired={isLab()}
+            placeholder={
+              dropdownLoading
+                ? "Loading..."
+                : "Search or enter LOQ"
+            }
+            onChange={(value) =>
+              handleCellEdit(
+                originalIndex,
+                key,
+                value
+              )
+            }
+          />
+        );
+      }
+
 
       // ------------------------------------------------------------
       // LAB MODE
@@ -3093,15 +3546,15 @@ export default function BatchReview({
           <input
             type={
               keyName === "loq" ||
-              keyName === "sampleQuantityAnalysis" ||
-              keyName === "sampleQuantityRetention"
+                keyName === "sampleQuantityAnalysis" ||
+                keyName === "sampleQuantityRetention"
                 ? "number"
                 : "text"
             }
             step={
               keyName === "loq" ||
-              keyName === "sampleQuantityAnalysis" ||
-              keyName === "sampleQuantityRetention"
+                keyName === "sampleQuantityAnalysis" ||
+                keyName === "sampleQuantityRetention"
                 ? "any"
                 : undefined
             }
@@ -3114,8 +3567,12 @@ export default function BatchReview({
             className={`
               min-w-[170px] w-full px-2 py-1 text-sm outline-none border rounded-md transition-all
               ${labEditable
-                ? "bg-white border-slate-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                : "bg-slate-100 text-slate-600 border-slate-200 cursor-not-allowed"
+                ? LAB_MANDATORY_FIELDS.has(keyName)
+                  ? "bg-yellow-50 border-yellow-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
+                  : "bg-white border-slate-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                : LAB_MANDATORY_FIELDS.has(keyName)
+                  ? "bg-yellow-50 text-slate-700 border-yellow-300 cursor-not-allowed"
+                  : "bg-slate-100 text-slate-600 border-slate-200 cursor-not-allowed"
               }
             `}
           />
@@ -3136,21 +3593,21 @@ export default function BatchReview({
           <input
             type={
               keyName === "loq" ||
-              keyName === "tatDays" ||
-              keyName === "parameterSequence" ||
-              keyName === "sampleQuantityAnalysis" ||
-              keyName === "sampleQuantityRetention" ||
-              keyName === "parameterIndividualRate" ||
-              keyName === "regulatoryRateDrug"
+                keyName === "tatDays" ||
+                keyName === "parameterSequence" ||
+                keyName === "sampleQuantityAnalysis" ||
+                keyName === "sampleQuantityRetention" ||
+                keyName === "parameterIndividualRate" ||
+                keyName === "regulatoryRateDrug"
                 ? "number"
                 : "text"
             }
             step={
               keyName === "loq" ||
-              keyName === "sampleQuantityAnalysis" ||
-              keyName === "sampleQuantityRetention" ||
-              keyName === "parameterIndividualRate" ||
-              keyName === "regulatoryRateDrug"
+                keyName === "sampleQuantityAnalysis" ||
+                keyName === "sampleQuantityRetention" ||
+                keyName === "parameterIndividualRate" ||
+                keyName === "regulatoryRateDrug"
                 ? "any"
                 : undefined
             }
@@ -3284,7 +3741,7 @@ export default function BatchReview({
         : isAdmin()
           ? false
           : status ===
-            "Rejected";
+          "Rejected";
 
 
     return (
@@ -3292,12 +3749,12 @@ export default function BatchReview({
 
         <div
           className={`px-5 py-4 border-b ${status ===
-              "Pending"
-              ? "bg-amber-50 border-amber-200"
-              : status ===
-                "Approved"
-                ? "bg-emerald-50 border-emerald-200"
-                : "bg-red-50 border-red-200"
+            "Pending"
+            ? "bg-amber-50 border-amber-200"
+            : status ===
+              "Approved"
+              ? "bg-emerald-50 border-emerald-200"
+              : "bg-red-50 border-red-200"
             }`}
         >
           <div className="flex items-center justify-between">
@@ -3305,12 +3762,12 @@ export default function BatchReview({
 
               <div
                 className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-sm ${status ===
-                    "Pending"
-                    ? "bg-amber-500"
-                    : status ===
-                      "Approved"
-                      ? "bg-emerald-500"
-                      : "bg-red-500"
+                  "Pending"
+                  ? "bg-amber-500"
+                  : status ===
+                    "Approved"
+                    ? "bg-emerald-500"
+                    : "bg-red-500"
                   }`}
               >
                 <StatusIcon className="w-5 h-5 text-white" />
@@ -3462,8 +3919,8 @@ export default function BatchReview({
                         param.id
                       }
                       className={`transition-all duration-200 ${isSelected
-                          ? "bg-emerald-50/70 hover:bg-emerald-50"
-                          : "hover:bg-slate-50"
+                        ? "bg-emerald-50/70 hover:bg-emerald-50"
+                        : "hover:bg-slate-50"
                         }`}
                     >
 
@@ -3831,6 +4288,62 @@ export default function BatchReview({
                     )}
 
 
+                  {canSendBackToReviewer() &&
+                    selectedRows.size === 0 && (
+                      <button
+                        onClick={handleSendBackToReviewer}
+                        disabled={
+                          sendBackReviewerLoading ||
+                          workflowLoading ||
+                          actionLoading
+                        }
+                        title="Send this reverted batch back to Reviewer"
+                        className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+                      >
+                        {sendBackReviewerLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4" />
+                            Send Back to Reviewer
+                          </>
+                        )}
+                      </button>
+                    )}
+
+
+                  {isAdmin() &&
+                    workflowStage === "Admin" &&
+                    workflowStatus === "Completed" &&
+                    selectedRows.size === 0 && (
+                      <button
+                        onClick={handleRevertMasterUpload}
+                        disabled={
+                          revertMasterLoading ||
+                          workflowLoading ||
+                          actionLoading
+                        }
+                        title="Revert only the master rows created by this batch"
+                        className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+                      >
+                        {revertMasterLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Reverting...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="w-4 h-4" />
+                            Revert Final Upload
+                          </>
+                        )}
+                      </button>
+                    )}
+
+
                   {canApprove(
                     activeTab
                   ) &&
@@ -3915,24 +4428,22 @@ export default function BatchReview({
                     >
                       {index <
                         workflowTracker.length -
-                          1 && (
-                        <div
-                          className={`absolute left-1/2 top-4 h-0.5 w-full ${
-                            completed
+                        1 && (
+                          <div
+                            className={`absolute left-1/2 top-4 h-0.5 w-full ${completed
                               ? "bg-emerald-400"
                               : "bg-slate-200"
-                          }`}
-                        />
-                      )}
+                              }`}
+                          />
+                        )}
 
                       <div
-                        className={`relative z-10 mx-auto flex h-8 w-8 items-center justify-center rounded-full border-2 bg-white ${
-                          completed
-                            ? "border-emerald-500"
-                            : current
-                              ? "border-blue-600"
-                              : "border-slate-300"
-                        }`}
+                        className={`relative z-10 mx-auto flex h-8 w-8 items-center justify-center rounded-full border-2 bg-white ${completed
+                          ? "border-emerald-500"
+                          : current
+                            ? "border-blue-600"
+                            : "border-slate-300"
+                          }`}
                       >
                         {completed ? (
                           <Check className="h-4 w-4 text-emerald-600" />
@@ -3948,20 +4459,19 @@ export default function BatchReview({
                       </div>
 
                       <div
-                        className={`mt-1 text-xs font-semibold ${
-                          completed
-                            ? "text-emerald-600"
-                            : current
-                              ? "text-blue-600"
-                              : "text-slate-400"
-                        }`}
+                        className={`mt-1 text-xs font-semibold ${completed
+                          ? "text-emerald-600"
+                          : current
+                            ? "text-blue-600"
+                            : "text-slate-400"
+                          }`}
                       >
                         {item.status}
                       </div>
 
                       <div className="mt-3 min-h-[76px] text-xs leading-5">
                         {item.status ===
-                        "Waiting" ? (
+                          "Waiting" ? (
                           <div className="text-slate-400">
                             Waiting
                           </div>
@@ -4071,14 +4581,14 @@ export default function BatchReview({
                         );
                       }}
                       className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${isActive
-                          ? status ===
-                            "Pending"
-                            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md"
-                            : status ===
-                              "Approved"
-                              ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md"
-                              : "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md"
-                          : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                        ? status ===
+                          "Pending"
+                          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md"
+                          : status ===
+                            "Approved"
+                            ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md"
+                            : "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md"
+                        : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
                         }`}
                     >
                       <StatusIcon className="w-4 h-4" />
@@ -4089,8 +4599,8 @@ export default function BatchReview({
 
                       <span
                         className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isActive
-                            ? "bg-white/25 text-white"
-                            : "bg-slate-100 text-slate-700"
+                          ? "bg-white/25 text-white"
+                          : "bg-slate-100 text-slate-700"
                           }`}
                       >
                         {count}
@@ -4162,22 +4672,22 @@ export default function BatchReview({
 
             <div
               className={`px-6 py-5 ${confirmDialog.type ===
-                  "approve"
-                  ? "bg-gradient-to-r from-emerald-500 to-teal-600"
+                "approve"
+                ? "bg-gradient-to-r from-emerald-500 to-teal-600"
+                : confirmDialog.type ===
+                  "reject"
+                  ? "bg-gradient-to-r from-red-500 to-rose-600"
                   : confirmDialog.type ===
-                    "reject"
-                    ? "bg-gradient-to-r from-red-500 to-rose-600"
+                    "save" ||
+                    confirmDialog.type ===
+                    "resubmit"
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-600"
                     : confirmDialog.type ===
-                      "save" ||
-                      confirmDialog.type ===
-                      "resubmit"
-                      ? "bg-gradient-to-r from-blue-500 to-indigo-600"
+                      "submitLab"
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-600"
                       : confirmDialog.type ===
-                        "submitLab"
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-600"
-                        : confirmDialog.type ===
-                          "submitReviewer"
-                          ? "bg-gradient-to-r from-blue-500 to-indigo-600"
+                        "submitReviewer"
+                        ? "bg-gradient-to-r from-blue-500 to-indigo-600"
                         : "bg-gradient-to-r from-slate-600 to-slate-700"
                 }`}
             >
@@ -4368,22 +4878,22 @@ export default function BatchReview({
                       !rejectReason.trim())
                   }
                   className={`flex-1 px-5 py-3 rounded-lg font-semibold disabled:opacity-50 flex items-center justify-center gap-2 shadow-md ${confirmDialog.type ===
-                      "approve"
-                      ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
+                    "approve"
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
+                    : confirmDialog.type ===
+                      "reject"
+                      ? "bg-gradient-to-r from-red-500 to-rose-600 text-white"
                       : confirmDialog.type ===
-                        "reject"
-                        ? "bg-gradient-to-r from-red-500 to-rose-600 text-white"
+                        "save" ||
+                        confirmDialog.type ===
+                        "resubmit"
+                        ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white"
                         : confirmDialog.type ===
-                          "save" ||
-                          confirmDialog.type ===
-                          "resubmit"
-                          ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white"
+                          "submitLab"
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
                           : confirmDialog.type ===
-                            "submitLab"
-                            ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
-                            : confirmDialog.type ===
-                              "submitReviewer"
-                              ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white"
+                            "submitReviewer"
+                            ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white"
                             : "bg-gradient-to-r from-slate-600 to-slate-700 text-white"
                     }`}
                 >

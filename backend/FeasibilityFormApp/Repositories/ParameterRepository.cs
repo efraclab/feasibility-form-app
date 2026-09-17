@@ -1017,7 +1017,7 @@ AND
                   WHERE A2.BatchId = ParameterMasterBuffer.BatchId
               )
               AND A.CurrentStage = 'Admin'
-              AND A.WorkflowStatus = 'Pending'
+              AND A.WorkflowStatus IN ('Pending', 'Completed')
         )
     )
     OR
@@ -1450,6 +1450,35 @@ ORDER BY Name, Code;
                 );
 
 
+
+            // --------------------------------------------------------
+            // LOQ SEARCH SUGGESTIONS
+            // Main LIMS: SpecificationMst.SpecLOQ
+            //
+            // NBSP (CHAR 160) is normalized to a normal space so values
+            // such as "0.005 " do not appear as visual duplicates.
+            // LOQ is text data: numeric, ranges and qualitative values
+            // are all intentionally preserved.
+            // --------------------------------------------------------
+
+            var loqOptions =
+                await mainConnection.QueryAsync
+                <ParameterDropdownOption>(
+                    @"
+SELECT DISTINCT
+    LTRIM(RTRIM(REPLACE(SpecLOQ, NCHAR(160), N' '))) AS Code,
+    LTRIM(RTRIM(REPLACE(SpecLOQ, NCHAR(160), N' '))) AS Name
+FROM [Efrac_Lims_2025].[dbo].[SpecificationMst]
+WHERE
+    NULLIF(
+        LTRIM(RTRIM(REPLACE(SpecLOQ, NCHAR(160), N' '))),
+        ''
+    ) IS NOT NULL
+ORDER BY Name;
+"
+                );
+
+
             return new ParameterDropdownOptions
             {
                 ParameterCodes =
@@ -1486,7 +1515,10 @@ ORDER BY Name, Code;
                     specificationCodes,
 
                 TestCodes =
-                    testCodes
+                    testCodes,
+
+                LoqOptions =
+                    loqOptions
             };
         }
 
@@ -1642,49 +1674,56 @@ ORDER BY Id;",
                         connection,
                         transaction,
                         param,
-                        uploadedBy
+                        uploadedBy,
+                        batchId
                     );
 
                     await InsertCategoryMasterAsync(
                         connection,
                         transaction,
                         param,
-                        uploadedBy
+                        uploadedBy,
+                        batchId
                     );
 
                     await InsertOHeadBasicAsync(
                         connection,
                         transaction,
                         param,
-                        uploadedBy
+                        uploadedBy,
+                        batchId
                     );
 
                     await InsertSpecificationMasterAsync(
                         connection,
                         transaction,
                         param,
-                        uploadedBy
+                        uploadedBy,
+                        batchId
                     );
 
                     await InsertParameterHeadMasterAsync(
                         connection,
                         transaction,
                         param,
-                        uploadedBy
+                        uploadedBy,
+                        batchId
                     );
 
                     await InsertRegulationAsync(
                         connection,
                         transaction,
                         param,
-                        uploadedBy
+                        uploadedBy,
+                        batchId
                     );
 
                     await InsertCategoryParameterAsync(
                         connection,
                         transaction,
                         param,
-                        uploadedBy
+                        uploadedBy,
+                        batchId
                     );
 
                     await connection.ExecuteAsync(
@@ -1803,6 +1842,477 @@ WHERE BatchId = @BatchId
 
 
         // ============================================================
+        // REVERT FINAL MASTER UPLOAD
+        // Deletes only rows that were recorded as newly created by this batch.
+        // Shared Commodity/CommodityGroup rows are preserved if other master
+        // records still reference them.
+        // ============================================================
+        public async Task<ParameterUploadResponse> RevertMasterUploadAsync(
+            long batchId,
+            string revertedBy
+        )
+        {
+            if (!string.Equals(
+                    revertedBy?.Trim(),
+                    "admin",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException(
+                    "Only Admin can revert the final master upload."
+                );
+            }
+
+            using var connection =
+                new SqlConnection(_connectionString);
+
+            await connection.OpenAsync();
+
+            using var transaction =
+                connection.BeginTransaction();
+
+            try
+            {
+                var workflowLog =
+                    await connection.QuerySingleOrDefaultAsync<ParameterUploadLog>(
+                        @"
+SELECT TOP 1
+    Id,
+    BatchId,
+    FileName,
+    TotalRows,
+    SuccessfulRows,
+    FailedRows,
+    UploadedBy,
+    UploadedAt,
+    Status,
+    ErrorMessage,
+    CurrentStage,
+    WorkflowStatus,
+    LastActionBy,
+    LastActionAt,
+    WorkflowRemarks
+FROM ParameterUploadBufferLog WITH (UPDLOCK, HOLDLOCK)
+WHERE BatchId = @BatchId
+ORDER BY Id DESC;",
+                        new { BatchId = batchId },
+                        transaction
+                    );
+
+                if (workflowLog == null)
+                    throw new Exception($"Batch {batchId} was not found.");
+
+                if (!string.Equals(
+                        workflowLog.CurrentStage,
+                        "Admin",
+                        StringComparison.OrdinalIgnoreCase)
+                    ||
+                    !string.Equals(
+                        workflowLog.WorkflowStatus,
+                        "Completed",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new Exception(
+                        $"Batch {batchId} can be reverted only from Admin / Completed. Current workflow is {workflowLog.CurrentStage ?? "Unknown"} / {workflowLog.WorkflowStatus ?? "Unknown"}."
+                    );
+                }
+
+                var auditRows =
+                    (await connection.QueryAsync<dynamic>(
+                        @"
+SELECT
+    Id,
+    TableName,
+    Key1Name,
+    Key1Value,
+    Key2Name,
+    Key2Value,
+    Key3Name,
+    Key3Value
+FROM ParameterMasterUploadAudit WITH (UPDLOCK, HOLDLOCK)
+WHERE BatchId = @BatchId
+  AND IsReverted = 0
+ORDER BY
+    CASE TableName
+        WHEN 'CATAGORY_PARAMETER' THEN 1
+        WHEN 'Regulation' THEN 2
+        WHEN 'SpecificationMst' THEN 3
+        WHEN 'OHEADMST' THEN 4
+        WHEN 'OHEADBasic' THEN 5
+        WHEN 'CatagoryMST' THEN 6
+        WHEN 'CommodityGroup' THEN 7
+        ELSE 99
+    END,
+    Id DESC;",
+                        new { BatchId = batchId },
+                        transaction
+                    )).ToList();
+
+                if (!auditRows.Any())
+                {
+                    throw new Exception(
+                        $"Batch {batchId} has no active master-upload audit records. Older batches uploaded before audit tracking cannot be safely reverted automatically."
+                    );
+                }
+
+                var deletedRows = 0;
+                var preservedSharedRows = 0;
+
+                foreach (var audit in auditRows)
+                {
+                    string tableName = audit.TableName;
+                    string? k1 = audit.Key1Value;
+                    string? k2 = audit.Key2Value;
+                    string? k3 = audit.Key3Value;
+
+                    int affected = 0;
+
+                    switch (tableName)
+                    {
+                        case "CATAGORY_PARAMETER":
+                            affected = await connection.ExecuteAsync(
+                                @"
+DELETE FROM CATAGORY_PARAMETER
+WHERE LTRIM(RTRIM(CatagoryCD)) = @K1
+  AND LTRIM(RTRIM(ParameterCD)) = @K2;",
+                                new { K1 = k1, K2 = k2 },
+                                transaction
+                            );
+                            break;
+
+                        case "Regulation":
+                            affected = await connection.ExecuteAsync(
+                                @"
+DELETE FROM Regulation
+WHERE LTRIM(RTRIM(RegulationCode)) = @K1
+  AND LTRIM(RTRIM(ISNULL(CommodityCode, ''))) = ISNULL(@K2, '')
+  AND LTRIM(RTRIM(ISNULL(RegParameter, ''))) = ISNULL(@K3, '');",
+                                new { K1 = k1, K2 = k2, K3 = k3 },
+                                transaction
+                            );
+                            break;
+
+                        case "SpecificationMst":
+                            affected = await connection.ExecuteAsync(
+                                @"
+DELETE FROM SpecificationMst
+WHERE LTRIM(RTRIM(SpecCode)) = @K1
+  AND LTRIM(RTRIM(ISNULL(SpecHeadCd, ''))) = ISNULL(@K2, '')
+  AND LTRIM(RTRIM(ISNULL(SpecCommodityCd, ''))) = ISNULL(@K3, '');",
+                                new { K1 = k1, K2 = k2, K3 = k3 },
+                                transaction
+                            );
+                            break;
+
+                        case "OHEADMST":
+                            affected = await connection.ExecuteAsync(
+                                @"
+DELETE FROM OHEADMST
+WHERE LTRIM(RTRIM(headPlantCd)) = @K1
+  AND LTRIM(RTRIM(headcd)) = @K2;",
+                                new { K1 = k1, K2 = k2 },
+                                transaction
+                            );
+                            break;
+
+                        case "OHEADBasic":
+                            affected = await connection.ExecuteAsync(
+                                @"
+DELETE FROM OHEADBasic
+WHERE LTRIM(RTRIM(headcd)) = @K1;",
+                                new { K1 = k1 },
+                                transaction
+                            );
+                            break;
+
+                        case "CatagoryMST":
+                            var commodityInUse =
+                                await connection.ExecuteScalarAsync<int>(
+                                    @"
+SELECT
+    CASE WHEN
+        EXISTS (
+            SELECT 1
+            FROM CATAGORY_PARAMETER
+            WHERE LTRIM(RTRIM(CatagoryCD)) = @Code
+        )
+        OR EXISTS (
+            SELECT 1
+            FROM Regulation
+            WHERE LTRIM(RTRIM(ISNULL(CommodityCode, ''))) = @Code
+        )
+        OR EXISTS (
+            SELECT 1
+            FROM SpecificationMst
+            WHERE LTRIM(RTRIM(ISNULL(SpecCommodityCd, ''))) = @Code
+        )
+    THEN 1 ELSE 0 END;",
+                                    new { Code = k1 },
+                                    transaction
+                                );
+
+                            if (commodityInUse == 0)
+                            {
+                                affected = await connection.ExecuteAsync(
+                                    @"
+DELETE FROM CatagoryMST
+WHERE LTRIM(RTRIM(CatagoryCode)) = @Code;",
+                                    new { Code = k1 },
+                                    transaction
+                                );
+                            }
+                            else
+                            {
+                                preservedSharedRows++;
+                            }
+                            break;
+
+                        case "CommodityGroup":
+                            var groupInUse =
+                                await connection.ExecuteScalarAsync<int>(
+                                    @"
+SELECT
+    CASE WHEN
+        EXISTS (
+            SELECT 1
+            FROM CatagoryMST
+            WHERE LTRIM(RTRIM(ISNULL(CatagoryGroupCode, ''))) = @Code
+        )
+        OR EXISTS (
+            SELECT 1
+            FROM CATAGORY_PARAMETER
+            WHERE LTRIM(RTRIM(ISNULL(CommodityGroupCode, ''))) = @Code
+        )
+        OR EXISTS (
+            SELECT 1
+            FROM Regulation
+            WHERE LTRIM(RTRIM(ISNULL(CommodityGroupCode, ''))) = @Code
+        )
+        OR EXISTS (
+            SELECT 1
+            FROM SpecificationMst
+            WHERE LTRIM(RTRIM(ISNULL(SpecCommodityGroupCode, ''))) = @Code
+        )
+    THEN 1 ELSE 0 END;",
+                                    new { Code = k1 },
+                                    transaction
+                                );
+
+                            if (groupInUse == 0)
+                            {
+                                affected = await connection.ExecuteAsync(
+                                    @"
+DELETE FROM CommodityGroup
+WHERE LTRIM(RTRIM(CommodityGroupCode)) = @Code;",
+                                    new { Code = k1 },
+                                    transaction
+                                );
+                            }
+                            else
+                            {
+                                preservedSharedRows++;
+                            }
+                            break;
+
+                        default:
+                            throw new Exception(
+                                $"Unsupported audited master table '{tableName}'. Revert stopped for safety."
+                            );
+                    }
+
+                    deletedRows += affected;
+
+                    await connection.ExecuteAsync(
+                        @"
+UPDATE ParameterMasterUploadAudit
+SET
+    IsReverted = 1,
+    RevertedBy = @RevertedBy,
+    RevertedAt = GETDATE()
+WHERE Id = @Id;",
+                        new
+                        {
+                            Id = (long)audit.Id,
+                            RevertedBy = revertedBy
+                        },
+                        transaction
+                    );
+                }
+
+                var parameterCount =
+                    await connection.ExecuteScalarAsync<int>(
+                        @"
+SELECT COUNT(1)
+FROM ParameterMasterBuffer
+WHERE BatchId = @BatchId;",
+                        new { BatchId = batchId },
+                        transaction
+                    );
+
+                await connection.ExecuteAsync(
+                    @"
+UPDATE ParameterMasterBuffer
+SET
+    Status = 'Approved',
+    LastUpdatedAt = GETDATE(),
+    LastUpdatedBy = @RevertedBy
+WHERE BatchId = @BatchId;",
+                    new
+                    {
+                        BatchId = batchId,
+                        RevertedBy = revertedBy
+                    },
+                    transaction
+                );
+
+                await connection.ExecuteAsync(
+                    @"
+UPDATE ParameterUploadBufferLog
+SET
+    Status = 'Approved',
+    ErrorMessage = NULL,
+    CurrentStage = 'Admin',
+    WorkflowStatus = 'Pending',
+    LastActionBy = @RevertedBy,
+    LastActionAt = GETDATE(),
+    WorkflowRemarks = 'Final master upload reverted by Admin'
+WHERE BatchId = @BatchId
+  AND CurrentStage = 'Admin'
+  AND WorkflowStatus = 'Completed';",
+                    new
+                    {
+                        BatchId = batchId,
+                        RevertedBy = revertedBy
+                    },
+                    transaction
+                );
+
+                await connection.ExecuteAsync(
+                    @"
+INSERT INTO USERLOG2
+(
+    USERID,
+    USERWRPS,
+    USERDATE,
+    USERSYSTEM,
+    [Change],
+    ADD_INFO
+)
+VALUES
+(
+    @UserId,
+    @UserWrps,
+    GETDATE(),
+    @UserSystem,
+    @Change,
+    @AddInfo
+);",
+                    new
+                    {
+                        UserId = revertedBy,
+                        UserWrps = $"PARAM-BATCH-{batchId}",
+                        UserSystem = "FeasibilityFormApp",
+                        Change = "Master Revert",
+                        AddInfo =
+                            $"Batch {batchId}: Admin / Completed to Admin / Pending. {deletedRows} master row(s) deleted; {preservedSharedRows} shared master row(s) preserved."
+                    },
+                    transaction
+                );
+
+                transaction.Commit();
+
+                return new ParameterUploadResponse
+                {
+                    UploadLogId = workflowLog.Id,
+                    TotalRows = parameterCount,
+                    SuccessfulRows = parameterCount,
+                    FailedRows = 0,
+                    Status = "Success",
+                    Message =
+                        preservedSharedRows > 0
+                            ? $"Batch {batchId} reverted successfully. {deletedRows} master row(s) removed. {preservedSharedRows} shared Commodity/Commodity Group row(s) were preserved because they are still in use."
+                            : $"Batch {batchId} reverted successfully. {deletedRows} master row(s) removed. The batch is back at Admin / Pending.",
+                    Errors = new List<string>()
+                };
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+
+
+        // ============================================================
+        // MASTER UPLOAD AUDIT
+        // Records ONLY rows newly inserted by this batch.
+        // Existing master rows that were skipped are never recorded.
+        // ============================================================
+        private async Task RecordMasterUploadAuditAsync(
+            SqlConnection connection,
+            SqlTransaction transaction,
+            long batchId,
+            long? bufferParameterId,
+            string tableName,
+            string? key1Name,
+            string? key1Value,
+            string? key2Name,
+            string? key2Value,
+            string? key3Name,
+            string? key3Value,
+            string uploadedBy
+        )
+        {
+            await connection.ExecuteAsync(
+                @"
+INSERT INTO ParameterMasterUploadAudit
+(
+    BatchId,
+    BufferParameterId,
+    TableName,
+    Key1Name,
+    Key1Value,
+    Key2Name,
+    Key2Value,
+    Key3Name,
+    Key3Value,
+    UploadedBy,
+    UploadedAt,
+    IsReverted
+)
+VALUES
+(
+    @BatchId,
+    @BufferParameterId,
+    @TableName,
+    @Key1Name,
+    @Key1Value,
+    @Key2Name,
+    @Key2Value,
+    @Key3Name,
+    @Key3Value,
+    @UploadedBy,
+    GETDATE(),
+    0
+);",
+                new
+                {
+                    BatchId = batchId,
+                    BufferParameterId = bufferParameterId,
+                    TableName = tableName,
+                    Key1Name = key1Name,
+                    Key1Value = key1Value,
+                    Key2Name = key2Name,
+                    Key2Value = key2Value,
+                    Key3Name = key3Name,
+                    Key3Value = key3Value,
+                    UploadedBy = uploadedBy
+                },
+                transaction
+            );
+        }
+
+
+        // ============================================================
         // INSERT COMMODITY MASTER
         // ============================================================
 
@@ -1810,7 +2320,8 @@ WHERE BatchId = @BatchId
             SqlConnection connection,
             SqlTransaction transaction,
             ParameterMaster param,
-            string uploadedBy
+            string uploadedBy,
+            long batchId
         )
         {
             if (
@@ -1894,6 +2405,21 @@ VALUES
                 },
                 transaction
             );
+
+            await RecordMasterUploadAuditAsync(
+                connection,
+                transaction,
+                batchId,
+                param.Id,
+                "CatagoryMST",
+                "CatagoryCode",
+                param.CommodityCode?.Trim(),
+                null,
+                null,
+                null,
+                null,
+                uploadedBy
+            );
         }
 
 
@@ -1905,7 +2431,8 @@ VALUES
             SqlConnection connection,
             SqlTransaction transaction,
             ParameterMaster param,
-            string uploadedBy
+            string uploadedBy,
+            long batchId
         )
         {
             if (
@@ -1986,6 +2513,21 @@ VALUES
                 },
                 transaction
             );
+
+            await RecordMasterUploadAuditAsync(
+                connection,
+                transaction,
+                batchId,
+                param.Id,
+                "CommodityGroup",
+                "CommodityGroupCode",
+                param.CommodityGroupCode?.Trim(),
+                null,
+                null,
+                null,
+                null,
+                uploadedBy
+            );
         }
 
 
@@ -2000,7 +2542,8 @@ VALUES
             SqlConnection connection,
             SqlTransaction transaction,
             ParameterMaster param,
-            string uploadedBy
+            string uploadedBy,
+            long batchId
         )
         {
             var headCode =
@@ -2085,6 +2628,21 @@ VALUES
                 },
                 transaction
             );
+
+            await RecordMasterUploadAuditAsync(
+                connection,
+                transaction,
+                batchId,
+                param.Id,
+                "OHEADBasic",
+                "headcd",
+                headCode,
+                null,
+                null,
+                null,
+                null,
+                uploadedBy
+            );
         }
 
 
@@ -2099,7 +2657,8 @@ VALUES
             SqlConnection connection,
             SqlTransaction transaction,
             ParameterMaster param,
-            string uploadedBy
+            string uploadedBy,
+            long batchId
         )
         {
             if (
@@ -2211,6 +2770,21 @@ VALUES
                 },
                 transaction
             );
+
+            await RecordMasterUploadAuditAsync(
+                connection,
+                transaction,
+                batchId,
+                param.Id,
+                "SpecificationMst",
+                "SpecCode",
+                param.SpecificationCode?.Trim(),
+                "SpecHeadCd",
+                parameterCode,
+                "SpecCommodityCd",
+                param.CommodityCode?.Trim(),
+                uploadedBy
+            );
         }
 
 
@@ -2222,7 +2796,8 @@ VALUES
             SqlConnection connection,
             SqlTransaction transaction,
             ParameterMaster param,
-            string uploadedBy
+            string uploadedBy,
+            long batchId
         )
         {
             var headCode =
@@ -2548,6 +3123,21 @@ VALUES
                 },
                 transaction
             );
+
+            await RecordMasterUploadAuditAsync(
+                connection,
+                transaction,
+                batchId,
+                param.Id,
+                "OHEADMST",
+                "headPlantCd",
+                DEFAULT_PLANT_CODE,
+                "headcd",
+                headCode,
+                null,
+                null,
+                uploadedBy
+            );
         }
 
 
@@ -2559,7 +3149,8 @@ VALUES
             SqlConnection connection,
             SqlTransaction transaction,
             ParameterMaster param,
-            string uploadedBy
+            string uploadedBy,
+            long batchId
         )
         {
             var regParameter =
@@ -2729,6 +3320,21 @@ VALUES
                 },
                 transaction
             );
+
+            await RecordMasterUploadAuditAsync(
+                connection,
+                transaction,
+                batchId,
+                param.Id,
+                "Regulation",
+                "RegulationCode",
+                param.RegulationCode?.Trim(),
+                "CommodityCode",
+                param.CommodityCode?.Trim(),
+                "RegParameter",
+                regParameter,
+                uploadedBy
+            );
         }
 
 
@@ -2740,7 +3346,8 @@ VALUES
             SqlConnection connection,
             SqlTransaction transaction,
             ParameterMaster param,
-            string uploadedBy
+            string uploadedBy,
+            long batchId
         )
         {
             var parameterCd =
@@ -3006,7 +3613,198 @@ VALUES
                 },
                 transaction
             );
+
+            await RecordMasterUploadAuditAsync(
+                connection,
+                transaction,
+                batchId,
+                param.Id,
+                "CATAGORY_PARAMETER",
+                "CatagoryCD",
+                param.CommodityCode?.Trim(),
+                "ParameterCD",
+                parameterCd,
+                null,
+                null,
+                uploadedBy
+            );
         }
+
+        // ============================================================
+        // ADMIN SENDS REVERTED BATCH BACK TO REVIEWER
+        // ============================================================
+        public async Task<ParameterUploadResponse> SendBackToReviewerAsync(
+            long batchId,
+            string userId,
+            string? userSystem,
+            string? remarks
+        )
+        {
+            if (!string.Equals(
+                    userId?.Trim(),
+                    "admin",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException(
+                    "Only Admin can send a reverted batch back to Reviewer."
+                );
+            }
+
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                var log = await connection.QuerySingleOrDefaultAsync<ParameterUploadLog>(
+                    @"
+SELECT TOP 1
+    Id,
+    BatchId,
+    FileName,
+    TotalRows,
+    SuccessfulRows,
+    FailedRows,
+    UploadedBy,
+    UploadedAt,
+    Status,
+    ErrorMessage,
+    CurrentStage,
+    WorkflowStatus,
+    LastActionBy,
+    LastActionAt,
+    WorkflowRemarks
+FROM ParameterUploadBufferLog WITH (UPDLOCK, HOLDLOCK)
+WHERE BatchId = @BatchId
+ORDER BY Id DESC;",
+                    new { BatchId = batchId },
+                    transaction
+                );
+
+                if (log == null)
+                    throw new Exception($"Batch {batchId} was not found.");
+
+                if (!string.Equals(log.CurrentStage, "Admin", StringComparison.OrdinalIgnoreCase) ||
+                    !string.Equals(log.WorkflowStatus, "Pending", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new Exception(
+                        $"Batch {batchId} can be sent back to Reviewer only from Admin / Pending. Current workflow is {log.CurrentStage ?? "Unknown"} / {log.WorkflowStatus ?? "Unknown"}."
+                    );
+                }
+
+                // This action is intentionally available only after the final master upload
+                // has been reverted. A normal Reviewer -> Admin submission must not be sent
+                // backwards through this endpoint.
+                if (!string.Equals(
+                        log.WorkflowRemarks?.Trim(),
+                        "Final master upload reverted by Admin",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new Exception(
+                        $"Batch {batchId} is Admin / Pending, but it was not produced by a final master-upload revert."
+                    );
+                }
+
+                var parameterCount = await connection.ExecuteScalarAsync<int>(
+                    @"
+SELECT COUNT(1)
+FROM ParameterMasterBuffer
+WHERE BatchId = @BatchId;",
+                    new { BatchId = batchId },
+                    transaction
+                );
+
+                if (parameterCount == 0)
+                    throw new Exception($"No parameter rows found for batch {batchId}.");
+
+                var workflowRemarks = string.IsNullOrWhiteSpace(remarks)
+                    ? "Reverted batch sent back by Admin to Reviewer."
+                    : remarks.Trim();
+
+                var affected = await connection.ExecuteAsync(
+                    @"
+UPDATE ParameterUploadBufferLog
+SET
+    Status = 'Approved',
+    ErrorMessage = NULL,
+    CurrentStage = 'Reviewer',
+    WorkflowStatus = 'Pending',
+    LastActionBy = @UserId,
+    LastActionAt = GETDATE(),
+    WorkflowRemarks = @WorkflowRemarks
+WHERE BatchId = @BatchId
+  AND CurrentStage = 'Admin'
+  AND WorkflowStatus = 'Pending'
+  AND LTRIM(RTRIM(ISNULL(WorkflowRemarks, ''))) = 'Final master upload reverted by Admin';",
+                    new
+                    {
+                        BatchId = batchId,
+                        UserId = userId.Trim(),
+                        WorkflowRemarks = workflowRemarks
+                    },
+                    transaction
+                );
+
+                if (affected == 0)
+                    throw new Exception(
+                        "Workflow stage changed before the batch could be sent back. Refresh and try again."
+                    );
+
+                await connection.ExecuteAsync(
+                    @"
+INSERT INTO USERLOG2
+(
+    USERID,
+    USERWRPS,
+    USERDATE,
+    USERSYSTEM,
+    [Change],
+    ADD_INFO
+)
+VALUES
+(
+    @UserId,
+    @UserWrps,
+    GETDATE(),
+    @UserSystem,
+    @Change,
+    @AddInfo
+);",
+                    new
+                    {
+                        UserId = userId.Trim(),
+                        UserWrps = $"PARAM-BATCH-{batchId}",
+                        UserSystem = string.IsNullOrWhiteSpace(userSystem)
+                            ? "FeasibilityFormApp"
+                            : userSystem.Trim(),
+                        Change = "Admin Send Back",
+                        AddInfo =
+                            $"Batch {batchId}: Admin / Pending to Reviewer / Pending. {workflowRemarks}"
+                    },
+                    transaction
+                );
+
+                transaction.Commit();
+
+                return new ParameterUploadResponse
+                {
+                    UploadLogId = log.Id,
+                    TotalRows = parameterCount,
+                    SuccessfulRows = parameterCount,
+                    FailedRows = 0,
+                    Status = "Success",
+                    Message = $"Batch {batchId} sent back to Reviewer successfully.",
+                    Errors = new List<string>()
+                };
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+
 
         // ============================================================
         // WORKFLOW TRACKER

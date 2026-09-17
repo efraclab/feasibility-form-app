@@ -501,6 +501,49 @@ namespace FeasibilityFormApp.Services
 
 
         // ============================================================
+        // REVERT FINAL MASTER UPLOAD
+        // ============================================================
+        public async Task<ParameterUploadResponse>
+            RevertMasterUploadAsync(
+                long batchId,
+                string revertedBy
+            )
+        {
+            if (batchId <= 0)
+                throw new ArgumentException("A valid batch ID is required.");
+
+            if (!string.Equals(
+                    revertedBy?.Trim(),
+                    "admin",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException(
+                    "Only Admin can revert a final master upload."
+                );
+            }
+
+            try
+            {
+                return await _parameterRepository
+                    .RevertMasterUploadAsync(
+                        batchId,
+                        revertedBy.Trim()
+                    );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error reverting final master upload for Batch {BatchId}.",
+                    batchId
+                );
+
+                throw;
+            }
+        }
+
+
+        // ============================================================
         // GET DROPDOWN OPTIONS
         // ============================================================
 
@@ -522,6 +565,50 @@ namespace FeasibilityFormApp.Services
                 throw;
             }
         }
+
+        // ============================================================
+        // ADMIN SENDS REVERTED BATCH BACK TO REVIEWER
+        // ============================================================
+        public async Task<ParameterUploadResponse> SendBackToReviewerAsync(
+            long batchId,
+            string userId,
+            string? userSystem,
+            string? remarks
+        )
+        {
+            if (batchId <= 0)
+                throw new ArgumentException("A valid batch ID is required.");
+
+            if (!string.Equals(
+                    userId?.Trim(),
+                    "admin",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException(
+                    "Only Admin can send a reverted batch back to Reviewer."
+                );
+            }
+
+            try
+            {
+                return await _parameterRepository.SendBackToReviewerAsync(
+                    batchId,
+                    userId.Trim(),
+                    userSystem,
+                    remarks
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error sending reverted batch {BatchId} back to Reviewer.",
+                    batchId
+                );
+                throw;
+            }
+        }
+
 
         // ============================================================
         // WORKFLOW TRACKER

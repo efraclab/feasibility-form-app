@@ -21,8 +21,7 @@ import type {
 } from '../models/ParameterUpdateRequest';
 
 
-const API_BASE_URL =
-  'http://192.168.3.250:5077/api/parameters';
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/parameters`;
 
 
 export interface DropdownOption {
@@ -44,6 +43,7 @@ export interface ParameterDropdownOptions {
   methodCodes: DropdownOption[];
   specificationCodes: DropdownOption[];
   testCodes: DropdownOption[];
+  loqOptions: DropdownOption[];
 }
 
 
@@ -476,6 +476,79 @@ export const uploadToMaster = async (
       getApiErrorMessage(
         error,
         'Failed to upload parameters to master tables'
+      )
+    );
+  }
+};
+
+
+/* =====================================================
+   REVERT FINAL MASTER UPLOAD
+===================================================== */
+
+export const revertMasterUpload = async (
+  batchId: number,
+  userId: string
+): Promise<ParameterUploadResponse> => {
+  try {
+    const response =
+      await axios.post<ParameterUploadResponse>(
+        `${API_BASE_URL}/revert-master-upload/${batchId}`,
+        {
+          userId,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 300000,
+        }
+      );
+
+    return response.data;
+  } catch (error: unknown) {
+    throw new Error(
+      getApiErrorMessage(
+        error,
+        'Failed to revert final master upload'
+      )
+    );
+  }
+};
+
+
+/* =====================================================
+   ADMIN SENDS REVERTED BATCH BACK TO REVIEWER
+===================================================== */
+
+export interface SendBackToReviewerRequest {
+  userId: string;
+  remarks?: string | null;
+}
+
+export const sendBackToReviewer = async (
+  batchId: number,
+  request: SendBackToReviewerRequest
+): Promise<ParameterUploadResponse> => {
+  try {
+    const response =
+      await axios.post<ParameterUploadResponse>(
+        `${API_BASE_URL}/workflow/${batchId}/send-back-to-reviewer`,
+        request,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 300000,
+        }
+      );
+
+    return response.data;
+  } catch (error: unknown) {
+    throw new Error(
+      getApiErrorMessage(
+        error,
+        'Failed to send batch back to Reviewer'
       )
     );
   }
