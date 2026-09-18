@@ -87,6 +87,8 @@ const REQUIRED_HEADERS = [
   "Test_Code",
   "INSTRUMENT",
   "LOQ",
+  "DetectorMode",
+  "Detector",
   "PARAMETER INDIVIDUAL RATE",
   "REGULATORY RATE (FOR DRUG)",
   "UploadDate",
@@ -304,8 +306,8 @@ export default function ParameterUploader({ employeeId, username, role, onBack }
             const COL_SAMPLE_QTY_ANALYSIS = 20;
             const COL_SAMPLE_QTY_RETENTION = 21;
             const COL_INSTRUMENT = 33;
-            const COL_PARAM_INDIVIDUAL_RATE = 35;
-            const COL_REGULATORY_RATE_DRUG = 36;
+            const COL_PARAM_INDIVIDUAL_RATE = 37;
+            const COL_REGULATORY_RATE_DRUG = 38;
 
             const isInteger = (val: string) => /^-?\d+$/.test(val.trim());
             const isFloat = (val: string) => /^-?\d+(\.\d+)?$/.test(val.trim());
@@ -928,7 +930,7 @@ export default function ParameterUploader({ employeeId, username, role, onBack }
                           Header Requirements
                         </p>
                         <p className="text-xs text-amber-700 leading-relaxed">
-                          All 38 columns required. Headers are validated by text
+                          All 40 columns required. Headers are validated by text
                           content (line breaks handled automatically).
                         </p>
                       </div>
@@ -968,7 +970,7 @@ export default function ParameterUploader({ employeeId, username, role, onBack }
                           </li>
                           <li className="flex items-center gap-2">
                             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                            No data beyond column 38
+                            No data beyond column 40
                           </li>
                           <li className="flex items-center gap-2">
                             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>

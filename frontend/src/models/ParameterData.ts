@@ -35,6 +35,8 @@ export interface ParameterData {
   testCode?: string | null;
   instrument?: string | null;
   loq?: string | null;
+  detectorMode?: string | null;
+  detector?: string | null;
   parameterIndividualRate?: number | null;
   regulatoryRateDrug?: number | null;
   addInfo?: string | null;

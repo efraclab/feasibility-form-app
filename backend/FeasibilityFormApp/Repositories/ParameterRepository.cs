@@ -123,6 +123,8 @@ INSERT INTO ParameterMasterBuffer
 
     Instrument,
     Loq,
+    DetectorMode,
+    Detector,
 
     ParameterIndividualRate,
     RegulatoryRateDrug,
@@ -397,6 +399,8 @@ SELECT
     @Instrument,
 
     @Loq,
+    @DetectorMode,
+    @Detector,
 
     @ParameterIndividualRate,
 
@@ -472,6 +476,8 @@ SELECT
 
                                 param.Instrument,
                                 param.Loq,
+                                param.DetectorMode,
+                                param.Detector,
 
                                 param.ParameterIndividualRate,
                                 param.RegulatoryRateDrug,
@@ -760,6 +766,12 @@ SET
     Loq =
         @Loq,
 
+    DetectorMode =
+        @DetectorMode,
+
+    Detector =
+        @Detector,
+
     ParameterIndividualRate =
         @ParameterIndividualRate,
 
@@ -867,6 +879,8 @@ WHERE Id = @Id;
 
                     param.Instrument,
                     param.Loq,
+                    param.DetectorMode,
+                    param.Detector,
 
                     param.ParameterIndividualRate,
                     param.RegulatoryRateDrug,
@@ -998,8 +1012,12 @@ AND
                   FROM ParameterUploadBufferLog R2
                   WHERE R2.BatchId = ParameterMasterBuffer.BatchId
               )
-              AND R.CurrentStage = 'Reviewer'
-              AND R.WorkflowStatus = 'Pending'
+              AND
+              (
+                  (R.CurrentStage = 'Reviewer' AND R.WorkflowStatus = 'Pending')
+                  OR
+                  (R.CurrentStage = 'Admin' AND R.WorkflowStatus = 'Completed')
+              )
         )
     )
     OR
@@ -1479,6 +1497,52 @@ ORDER BY Name;
                 );
 
 
+            // --------------------------------------------------------
+            // DETECTOR MODE SEARCH SUGGESTIONS
+            // Main LIMS: OHEADMST.headDetectorMode
+            // --------------------------------------------------------
+
+            var detectorModeOptions =
+                await mainConnection.QueryAsync
+                <ParameterDropdownOption>(
+                    @"
+SELECT DISTINCT
+    LTRIM(RTRIM(REPLACE(headDetectorMode, NCHAR(160), N' '))) AS Code,
+    LTRIM(RTRIM(REPLACE(headDetectorMode, NCHAR(160), N' '))) AS Name
+FROM OHEADMST
+WHERE
+    NULLIF(
+        LTRIM(RTRIM(REPLACE(headDetectorMode, NCHAR(160), N' '))),
+        ''
+    ) IS NOT NULL
+ORDER BY Name;
+"
+                );
+
+
+            // --------------------------------------------------------
+            // DETECTOR SEARCH SUGGESTIONS
+            // Main LIMS: OHEADMST.headDetector
+            // --------------------------------------------------------
+
+            var detectorOptions =
+                await mainConnection.QueryAsync
+                <ParameterDropdownOption>(
+                    @"
+SELECT DISTINCT
+    LTRIM(RTRIM(REPLACE(headDetector, NCHAR(160), N' '))) AS Code,
+    LTRIM(RTRIM(REPLACE(headDetector, NCHAR(160), N' '))) AS Name
+FROM OHEADMST
+WHERE
+    NULLIF(
+        LTRIM(RTRIM(REPLACE(headDetector, NCHAR(160), N' '))),
+        ''
+    ) IS NOT NULL
+ORDER BY Name;
+"
+                );
+
+
             return new ParameterDropdownOptions
             {
                 ParameterCodes =
@@ -1518,7 +1582,13 @@ ORDER BY Name;
                     testCodes,
 
                 LoqOptions =
-                    loqOptions
+                    loqOptions,
+
+                DetectorModeOptions =
+                    detectorModeOptions,
+
+                DetectorOptions =
+                    detectorOptions
             };
         }
 
@@ -3013,6 +3083,10 @@ INSERT INTO OHEADMST
 
     headLOQ,
 
+    headDetectorMode,
+
+    headDetector,
+
     headInstNo,
 
     headRate,
@@ -3052,6 +3126,10 @@ VALUES
     @HeadGroupQty,
 
     @Loq,
+
+    @DetectorMode,
+
+    @Detector,
 
     @InstrumentCode,
 
@@ -3104,6 +3182,10 @@ VALUES
                         "-",
 
                     param.Loq,
+
+                    param.DetectorMode,
+
+                    param.Detector,
 
                     InstrumentCode =
                         instrumentCode,
@@ -4318,6 +4400,10 @@ FROM
                 THEN 'Test Unit'
             WHEN Loq IS NULL
                 THEN 'LOQ'
+            WHEN NULLIF(LTRIM(RTRIM(ISNULL(DetectorMode, ''))), '') IS NULL
+                THEN 'DetectorMode'
+            WHEN NULLIF(LTRIM(RTRIM(ISNULL(Detector, ''))), '') IS NULL
+                THEN 'Detector'
             WHEN SampleQuantityAnalysis IS NULL
                 THEN 'Sample Quantity Analysis'
             WHEN SampleQuantityRetention IS NULL

@@ -38,6 +38,8 @@
         public string? TestCode { get; set; }
         public string? Instrument { get; set; }
         public string? Loq { get; set; }
+        public string? DetectorMode { get; set; }
+        public string? Detector { get; set; }
         public float? ParameterIndividualRate { get; set; }
         public float? RegulatoryRateDrug { get; set; }
         public string? AddInfo { get; set; }

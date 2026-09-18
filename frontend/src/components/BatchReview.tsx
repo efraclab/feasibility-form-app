@@ -4,6 +4,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import * as XLSX from "xlsx";
 
 import {
   ChevronLeft,
@@ -25,6 +26,7 @@ import {
   RefreshCw,
   Send,
   ChevronDown,
+  Download,
 } from "lucide-react";
 
 import {
@@ -154,6 +156,8 @@ const EMPTY_DROPDOWN_OPTIONS: ParameterDropdownOptions = {
   specificationCodes: [],
   testCodes: [],
   loqOptions: [],
+  detectorModeOptions: [],
+  detectorOptions: [],
 };
 
 
@@ -184,7 +188,7 @@ const COLUMN_HEADERS = [
   },
   {
     key: "commodityName",
-    label: "Commodity Name *",
+    label: "Commodity Name",
   },
   {
     key: "commodityCode",
@@ -208,7 +212,7 @@ const COLUMN_HEADERS = [
   },
   {
     key: "regulationName",
-    label: "Regulation Name *",
+    label: "Regulation Name",
   },
   {
     key: "regulationCode",
@@ -216,7 +220,7 @@ const COLUMN_HEADERS = [
   },
   {
     key: "parameterLabDistribution",
-    label: "Lab Name *",
+    label: "Lab Name",
   },
   {
     key: "labCode",
@@ -293,6 +297,14 @@ const COLUMN_HEADERS = [
   {
     key: "loq",
     label: "LOQ",
+  },
+  {
+    key: "detectorMode",
+    label: "DetectorMode",
+  },
+  {
+    key: "detector",
+    label: "Detector",
   },
   {
     key: "parameterIndividualRate",
@@ -435,6 +447,8 @@ const REVIEWER_ADMIN_EDITABLE_FIELDS = new Set<string>([
   "testCode",
   "instrument",
   "loq",
+  "detectorMode",
+  "detector",
   "parameterIndividualRate",
   "regulatoryRateDrug",
   "addInfo",
@@ -447,6 +461,8 @@ const LAB_EDITABLE_FIELDS = new Set<string>([
   "specificationName",
   "testUnit",
   "loq",
+  "detectorMode",
+  "detector",
   "sampleQuantityAnalysis",
   "sampleQuantityRetention",
   "requiredSampleQuantityUnit",
@@ -500,6 +516,8 @@ const LAB_MANDATORY_FIELDS = new Set<string>([
   "specificationName",
   "testUnit",
   "loq",
+  "detectorMode",
+  "detector",
   "sampleQuantityAnalysis",
   "sampleQuantityRetention",
   "requiredSampleQuantityUnit",
@@ -659,11 +677,17 @@ function SearchableNameDropdown({
       {isOpen && !disabled && dropdownRect && createPortal(
         <div
           onMouseDown={(e) => e.stopPropagation()}
-          className="fixed z-[10000] max-h-[420px] overflow-y-auto overflow-x-hidden rounded-md border border-slate-200 bg-white shadow-xl"
+          className="fixed z-[10000] max-h-[520px] overflow-y-auto overflow-x-auto rounded-md border border-slate-200 bg-white shadow-2xl"
           style={{
-            left: dropdownRect.left,
-            top: dropdownRect.bottom + 4,
-            width: dropdownRect.width,
+            left: Math.min(
+              dropdownRect.left,
+              Math.max(8, window.innerWidth - Math.max(dropdownRect.width, 300) - 8)
+            ),
+            ...(window.innerHeight - dropdownRect.bottom >= 260
+              ? { top: dropdownRect.bottom + 4 }
+              : { bottom: window.innerHeight - dropdownRect.top + 4 }),
+            width: Math.max(dropdownRect.width, 300),
+            maxWidth: "calc(100vw - 16px)",
           }}
         >
           {filteredOptions.length > 0 ? (
@@ -815,11 +839,17 @@ function SearchableSuggestionInput({
       {isOpen && !disabled && dropdownRect && createPortal(
         <div
           onMouseDown={(e) => e.stopPropagation()}
-          className="fixed z-[10000] max-h-[420px] overflow-y-auto overflow-x-hidden rounded-md border border-slate-200 bg-white shadow-xl"
+          className="fixed z-[10000] max-h-[520px] overflow-y-auto overflow-x-auto rounded-md border border-slate-200 bg-white shadow-2xl"
           style={{
-            left: dropdownRect.left,
-            top: dropdownRect.bottom + 4,
-            width: dropdownRect.width,
+            left: Math.min(
+              dropdownRect.left,
+              Math.max(8, window.innerWidth - Math.max(dropdownRect.width, 300) - 8)
+            ),
+            ...(window.innerHeight - dropdownRect.bottom >= 260
+              ? { top: dropdownRect.bottom + 4 }
+              : { bottom: window.innerHeight - dropdownRect.top + 4 }),
+            width: Math.max(dropdownRect.width, 300),
+            maxWidth: "calc(100vw - 16px)",
           }}
         >
           {filteredOptions.length > 0 ? (
@@ -832,7 +862,7 @@ function SearchableSuggestionInput({
                   onChange(option.name);
                   setIsOpen(false);
                 }}
-                className="w-full px-3 py-2 text-left whitespace-normal break-words hover:bg-amber-50 border-b border-slate-100 last:border-b-0"
+                className="w-full px-3 py-2 text-left whitespace-nowrap hover:bg-amber-50 border-b border-slate-100 last:border-b-0"
               >
                 <div className="text-sm font-medium text-slate-800">
                   {option.name}
@@ -2853,6 +2883,8 @@ export default function BatchReview({
           { label: "Specification Name", value: row.specificationName },
           { label: "Test Unit", value: row.testUnit },
           { label: "LOQ", value: row.loq },
+          { label: "DetectorMode", value: row.detectorMode },
+          { label: "Detector", value: row.detector },
           { label: "Sample Quantity Analysis", value: row.sampleQuantityAnalysis },
           { label: "Sample Quantity Retention", value: row.sampleQuantityRetention },
           { label: "Required Sample Quantity Unit", value: row.requiredSampleQuantityUnit },
@@ -3053,6 +3085,244 @@ export default function BatchReview({
         }
       );
     };
+
+
+  // ============================================================
+  // REVIEWER TEMPLATE DOWNLOAD
+  // Available to Reviewer after Admin final upload is completed.
+  //
+  // Intentionally NOT mapped yet:
+  // - NON FSSAI/FSSAI/DRUG CODE
+  // - REGULATION CODE
+  // NON FSSAI/FSSAI/DRUG is mapped to FSSAI.
+  // REGULATION NAME is mapped to IS 10500 : 2012.
+  // Other regulation-specific columns remain blank for now.
+  // ============================================================
+  const REVIEWER_TEMPLATE_HEADERS = [
+    "DATABASE TYPE",
+    "DEPARTMENT CODE",
+    "LAB NAME",
+    "LAB NAME CODE",
+    "COMMODITY GROUP",
+    "COMMODITY GROUP CODE",
+    "COMMODITY NAME",
+    "COMMODITY NAME CODE",
+    "VERTICAL \nDISTRIBUTION ",
+    "VERTICAL \nDISTRIBUTION CODE",
+    "PARAMETER GROUP",
+    "PARAMETER GROUP CODE",
+    "PARAMETER \nSUB-GROUP",
+    "PARAMETER \nSUB-GROUP CODE",
+    "PARAMETER NAME",
+    "PARAMETER NAME CODE",
+    "TAT (DAYS)",
+    "SEQUENCE",
+    "PARAMETER LAB DISTRIBUTION\n(FDS/MT/RA/MB/WTR/ENV/GAS)",
+    "PARAMETER LAB DISTRIBUTION\n(FDS/MT/RA/MB/WTR/ENV/GAS) CODE",
+    "OUTSOURCE PARAMETER (YES/NO)",
+    "GROUP QTY",
+    "SAMPLE QUANTITY REQUIRED-FOR ANALYSIS",
+    "SAMPLE QUANTITY REQUIRED-FOR RETENTION",
+    "REQUIRED SAMPLE QUANTITY (UNIT)",
+    "REQUIRED SAMPLE QUANTITY (UNIT) CODE",
+    "NABL \nSCOPE STATUS",
+    "CATEGORY NO.",
+    "SUB CLAUSE",
+    "GENERAL PARAMETER",
+    "FSSAI",
+    "EIC",
+    "COKE/NESTLE/CUSTOM",
+    "METHOD 1",
+    "METHOD 1 CODE",
+    "METHOD 2",
+    "METHOD 2 CODE",
+    "METHOD 3",
+    "METHOD 3 CODE",
+    "METHOD 4",
+    "METHOD 4 CODE",
+    "METHOD 5",
+    "METHOD 5 CODE",
+    "METHOD 6",
+    "METHOD 6 CODE",
+    "METHOD 7",
+    "METHOD 7 CODE",
+    "METHOD 8",
+    "METHOD 8 CODE",
+    "SPECIFICATION",
+    "SPECIFICATION CODE",
+    "UNIT",
+    "UNIT CODE",
+    "LOQ",
+    "INSTRUMENT",
+    "INSTRUMENT CODE",
+    " DETECTOR MODE",
+    "DETECTOR",
+    "IS 10500 : 2012",
+    "IS 14543 : 2024",
+    "IS 13428 : 2024",
+    "IS 4251 : 1967",
+    "EU 2020/2184",
+    "IS 3328 : 1993\n(BIS)",
+    "WHO ED. 4",
+    "IS 456 : 2000",
+    "IS 1069 : 1993",
+    "QFS-RQ-196",
+    "QFS-RQ-185",
+    "QFS-RQ-190",
+    "QFS-RQ-197",
+    "BP-RQ-183",
+    "BDS-1240",
+    "SLS-894",
+    "SLS-614",
+    "NDWQS : 2005",
+    "KORE",
+    "IS 15410 : 2003",
+    "IS 15609 : 2005",
+    "ES-RQ-220",
+    "NAAQM 2009",
+    "ENV-RQ-225",
+    "IS 1656 : 2022",
+    "IS 11536 : 2022",
+    "IS 14433 : 2022",
+    "IS 15757 : 2022",
+    "IS 17945 : 2022",
+    "IS 9845 : 1998",
+    "CPCB SCHEDULE II",
+    "CPCB SCHEDULE VI",
+    "IS 544 : 2014",
+    "IS 546 : 2014",
+    "IS 1165 : 2022",
+    "IS 3448 : 2014",
+    "IS 1166 : 2022",
+    "IS 4276 : 2014",
+    "IS 4277 : 2014",
+    "IS 8361 : 2014",
+    "IS 13334 : 2014 (PART 1)",
+    "IS 13334 : 2014 (PART 2)",
+    "IS 14542 : 1998",
+    "IS 2508 : 2016",
+    "IS 12252 : 2017",
+    "IS 4700 : 1968",
+    "USEPA",
+    "IP 2022",
+    "GB 5749",
+    "IS 1070 : 1992",
+    "IS 4221 : 1967",
+    "IS 3957 : 1966",
+    "IS 11624 : 1986",
+    "ISBT 2019",
+    "ISBT 2015",
+    "FCO 1985",
+    "BP 2024/EP 2024",
+    "USP 2024",
+    "IS 15410 : 2025",
+    "IS 1397",
+    "CLIENT ",
+    "IN-HOUSE",
+    "DURG SEGMENTS",
+    "PARAMETER INDIVIDUAL\nRATE",
+    "REGULATORY RATE",
+  ];
+
+
+  const handleDownloadReviewerTemplate = () => {
+    if (!isReviewer()) {
+      showToast("warning", "Only Reviewer can download this template.");
+      return;
+    }
+
+    if (workflowStatus !== "Completed") {
+      showToast(
+        "warning",
+        "Reviewer template becomes available after Admin final upload is completed."
+      );
+      return;
+    }
+
+    if (!editedData.length) {
+      showToast("warning", "No parameter data found for this batch.");
+      return;
+    }
+
+    const rows = editedData.map((param) => {
+      const row = new Array(REVIEWER_TEMPLATE_HEADERS.length).fill("");
+
+      // C/D - Current workflow has one Lab name/code pair.
+      row[2] = param.parameterLabDistribution ?? "";
+      row[3] = param.labCode ?? "";
+
+      row[4] = param.commodityGroup ?? "";
+      row[5] = param.commodityGroupCode ?? "";
+      row[6] = param.commodityName ?? "";
+      row[7] = param.commodityCode ?? "";
+
+      row[10] = param.parameterGroup ?? "";
+      row[11] = param.parameterGroupCode ?? "";
+      row[12] = param.parameterSubGroup ?? "";
+      row[13] = param.parameterSubGroupCode ?? "";
+      row[14] = param.parameterName ?? "";
+      row[15] = param.parameterCode ?? "";
+      row[16] = param.tatDays ?? "";
+      row[17] = param.parameterSequence ?? "";
+
+      row[18] = param.parameterLabDistribution ?? "";
+      row[19] = param.labCode ?? "";
+      row[20] = param.outsourceYN ?? "";
+
+      row[22] = param.sampleQuantityAnalysis ?? "";
+      row[23] = param.sampleQuantityRetention ?? "";
+      row[24] = param.requiredSampleQuantityUnit ?? "";
+      row[25] = param.unitCode ?? "";
+      row[26] = param.nablScopeStatus ?? "";
+      row[27] = param.fssaiCategoryNo ?? "";
+      row[28] = param.subClause ?? "";
+
+      // Current template NON FSSAI/FSSAI/DRUG -> Reviewer FSSAI
+      row[30] = param.nonFssaiFssaiDrug ?? "";
+
+      row[33] = param.methodName ?? "";
+      row[34] = param.methodCode ?? "";
+
+      row[49] = param.specificationName ?? "";
+      row[50] = param.specificationCode ?? "";
+      row[51] = param.testUnit ?? "";
+      row[52] = param.testCode ?? "";
+      row[53] = param.loq ?? "";
+      row[54] = param.instrument ?? "";
+      // BD / Instrument Code is intentionally blank because the current
+      // ParameterData model contains Instrument name only.
+      row[56] = param.detectorMode ?? "";
+      row[57] = param.detector ?? "";
+
+      // Current template REGULATION NAME -> Reviewer IS 10500 : 2012
+      row[58] = param.regulationName ?? "";
+
+      // Remaining regulation-specific columns intentionally blank for now.
+      // DO:DQ extra Reviewer-only columns intentionally blank for now.
+      row[121] = param.parameterIndividualRate ?? "";
+      row[122] = param.regulatoryRateDrug ?? "";
+
+      return row;
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet([
+      REVIEWER_TEMPLATE_HEADERS,
+      ...rows,
+    ]);
+
+    worksheet["!freeze"] = { xSplit: 0, ySplit: 1 };
+    worksheet["!cols"] = REVIEWER_TEMPLATE_HEADERS.map((header) => ({
+      wch: Math.min(Math.max(header.replace(/\n/g, " ").length + 2, 12), 34),
+    }));
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Reviewer Template");
+
+    XLSX.writeFile(
+      workbook,
+      `Reviewer_Template_Batch_${batchId}.xlsx`
+    );
+  };
 
 
   const canUploadAdminToMaster =
@@ -3520,6 +3790,70 @@ export default function BatchReview({
               dropdownLoading
                 ? "Loading..."
                 : "Search or enter LOQ"
+            }
+            onChange={(value) =>
+              handleCellEdit(
+                originalIndex,
+                key,
+                value
+              )
+            }
+          />
+        );
+      }
+
+
+      // ------------------------------------------------------------
+      // DETECTOR MODE SEARCHABLE SUGGESTION BOX
+      // Suggestions come from main LIMS OHEADMST.headDetectorMode.
+      // Free typing remains allowed.
+      // ------------------------------------------------------------
+      if (
+        keyName === "detectorMode" &&
+        (isLab() || isReviewer() || isAdmin())
+      ) {
+        return (
+          <SearchableSuggestionInput
+            value={String(param[key] ?? "")}
+            options={dropdownOptions.detectorModeOptions}
+            disabled={dropdownLoading}
+            highlightRequired={isLab()}
+            placeholder={
+              dropdownLoading
+                ? "Loading..."
+                : "Search or enter DetectorMode"
+            }
+            onChange={(value) =>
+              handleCellEdit(
+                originalIndex,
+                key,
+                value
+              )
+            }
+          />
+        );
+      }
+
+
+      // ------------------------------------------------------------
+      // DETECTOR SEARCHABLE SUGGESTION BOX
+      // Suggestions come from main LIMS OHEADMST.headDetector.
+      // Free typing remains allowed.
+      // ------------------------------------------------------------
+      if (
+        keyName === "detector" &&
+        (isLab() || isReviewer() || isAdmin())
+      ) {
+        return (
+          <SearchableSuggestionInput
+            value={String(param[key] ?? "")}
+            options={dropdownOptions.detectorOptions}
+            disabled={dropdownLoading}
+            highlightRequired={isLab()}
+            placeholder={
+              dropdownLoading
+                ? "Loading..."
+                : "Search or enter Detector"
             }
             onChange={(value) =>
               handleCellEdit(
@@ -4242,6 +4576,21 @@ export default function BatchReview({
                             Submit to Admin
                           </>
                         )}
+                      </button>
+                    )}
+
+
+                  {isReviewer() &&
+                    workflowStatus === "Completed" &&
+                    selectedRows.size === 0 && (
+                      <button
+                        onClick={handleDownloadReviewerTemplate}
+                        disabled={workflowLoading || editedData.length === 0}
+                        title="Download the populated Reviewer template for this completed batch"
+                        className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-sky-600 to-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download Reviewer Template
                       </button>
                     )}
 

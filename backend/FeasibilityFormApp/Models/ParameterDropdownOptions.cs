@@ -46,5 +46,11 @@ public class ParameterDropdownOptions
 
     public IEnumerable<ParameterDropdownOption> LoqOptions { get; set; }
         = new List<ParameterDropdownOption>();
+
+    public IEnumerable<ParameterDropdownOption> DetectorModeOptions { get; set; }
+        = new List<ParameterDropdownOption>();
+
+    public IEnumerable<ParameterDropdownOption> DetectorOptions { get; set; }
+        = new List<ParameterDropdownOption>();
 }
 }

@@ -44,6 +44,8 @@ export interface ParameterDropdownOptions {
   specificationCodes: DropdownOption[];
   testCodes: DropdownOption[];
   loqOptions: DropdownOption[];
+  detectorModeOptions: DropdownOption[];
+  detectorOptions: DropdownOption[];
 }
 
 
@@ -829,6 +831,27 @@ export const convertExcelRowToParameter = (
 
     loq:
       row['LOQ'] ?? null,
+
+    detectorMode:
+      row['DetectorMode']
+        ?.toString()
+        .trim() ||
+      row['DETECTOR MODE']
+        ?.toString()
+        .trim() ||
+      row['DETECTORMODE']
+        ?.toString()
+        .trim() ||
+      null,
+
+    detector:
+      row['Detector']
+        ?.toString()
+        .trim() ||
+      row['DETECTOR']
+        ?.toString()
+        .trim() ||
+      null,
 
     parameterIndividualRate:
       row['PARAMETER INDIVIDUAL RATE']

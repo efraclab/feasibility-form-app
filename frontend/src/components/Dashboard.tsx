@@ -99,6 +99,16 @@ export default function Dashboard({
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showUserMenu, setShowUserMenu] = useState(false);
 
+  // Only Quotation team can see/access the Upload Parameters dashboard button.
+  const isQuotationTeam = () => {
+    const normalizedRole = (role || "").trim().toUpperCase();
+
+    return (
+      normalizedRole === "ROLE000008" ||
+      normalizedRole === "ROLE000020"
+    );
+  };
+
   useEffect(() => {
     fetchForms();
   }, []);
@@ -335,19 +345,21 @@ export default function Dashboard({
                 </div>
               </button>
 
-              {/* Upload Parameters */}
-              <button
-                onClick={() => onNavigate("parameters")}
-                className="group relative flex items-center gap-3 p-4 bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 rounded-xl border border-purple-200 hover:border-purple-300 transition-all shadow-sm hover:shadow-md"
-              >
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                  <Upload className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-bold text-slate-800">Upload Parameters</p>
-                  <p className="text-xs text-slate-600">Bulk import data</p>
-                </div>
-              </button>
+              {/* Upload Parameters - Quotation team only */}
+              {isQuotationTeam() && (
+                <button
+                  onClick={() => onNavigate("parameters")}
+                  className="group relative flex items-center gap-3 p-4 bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 rounded-xl border border-purple-200 hover:border-purple-300 transition-all shadow-sm hover:shadow-md"
+                >
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <Upload className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-slate-800">Upload Parameters</p>
+                    <p className="text-xs text-slate-600">Bulk import data</p>
+                  </div>
+                </button>
+              )}
 
               {/* Review Batches */}
               <button
