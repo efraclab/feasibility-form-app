@@ -412,6 +412,12 @@ export interface WorkflowTrackerItem {
 
 export interface WorkflowTrackerResponse {
   batchId: number;
+  fileName?: string | null;
+  totalRows?: number;
+  successfulRows?: number;
+  failedRows?: number;
+  uploadedBy?: string | null;
+  uploadedAt?: string | null;
   currentStage?: string | null;
   workflowStatus?: string | null;
   lastActionBy?: string | null;
@@ -436,6 +442,33 @@ export const getWorkflowTracker = async (
       getApiErrorMessage(
         error,
         'Failed to fetch workflow tracker'
+      )
+    );
+  }
+};
+
+
+export const getBatchHistory = async (
+  searchTerm = '',
+  pageNumber = 1,
+  pageSize = 50
+): Promise<WorkflowTrackerResponse[]> => {
+  try {
+    const response =
+      await axios.get<WorkflowTrackerResponse[]>(
+        `${API_BASE_URL}/workflow/history`,
+        {
+          params: { searchTerm, pageNumber, pageSize },
+          timeout: 300000,
+        }
+      );
+
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error: unknown) {
+    throw new Error(
+      getApiErrorMessage(
+        error,
+        'Failed to fetch batch history'
       )
     );
   }

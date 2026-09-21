@@ -497,84 +497,35 @@ namespace FeasibilityFormApp.Controllers
 
 
         // ============================================================
-        // ADMIN SENDS REVERTED BATCH BACK TO REVIEWER
+        // ALL BATCH HISTORY - READ ONLY / AVAILABLE TO EVERY USER
         // ============================================================
-        [HttpPost("workflow/{batchId}/send-back-to-reviewer")]
-        public async Task<IActionResult> SendBackToReviewer(
-            long batchId,
-            [FromBody] SendBackToReviewerRequest request
+        [HttpGet("workflow/history")]
+        public async Task<IActionResult> GetBatchHistory(
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 50
         )
         {
             try
             {
-                if (batchId <= 0)
-                {
-                    return BadRequest(new
-                    {
-                        status = "Failed",
-                        message = "Valid BatchId is required"
-                    });
-                }
-
-                if (request == null ||
-                    string.IsNullOrWhiteSpace(request.UserId))
-                {
-                    return BadRequest(new
-                    {
-                        status = "Failed",
-                        message = "UserId is required"
-                    });
-                }
-
-                if (!string.Equals(
-                        request.UserId.Trim(),
-                        "admin",
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    return StatusCode(
-                        StatusCodes.Status403Forbidden,
-                        new
-                        {
-                            status = "Failed",
-                            message = "Only Admin can send a reverted batch back to Reviewer."
-                        }
-                    );
-                }
-
-                var userSystem =
-                    HttpContext.Connection.RemoteIpAddress?.ToString()
-                    ?? "FeasibilityFormApp";
-
-                var result =
-                    await _parameterService.SendBackToReviewerAsync(
-                        batchId,
-                        request.UserId.Trim(),
-                        userSystem,
-                        request.Remarks
-                    );
+                var result = await _parameterService.GetBatchHistoryAsync(
+                    searchTerm,
+                    pageNumber,
+                    pageSize
+                );
 
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "Error sending reverted batch {BatchId} back to Reviewer",
-                    batchId
-                );
+                _logger.LogError(ex, "Error fetching all batch history");
 
-                return BadRequest(new
+                return StatusCode(500, new
                 {
-                    status = "Failed",
-                    message = ex.Message
+                    message = "Error fetching batch history",
+                    detail = ex.Message
                 });
             }
-        }
-
-        public class SendBackToReviewerRequest
-        {
-            public string UserId { get; set; } = string.Empty;
-            public string? Remarks { get; set; }
         }
 
 

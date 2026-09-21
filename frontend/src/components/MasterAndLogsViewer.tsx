@@ -31,6 +31,8 @@ import {
   buildCommodityRequest,
 } from "../services/MasterService";
 import { fetchLogs } from "../services/LogService";
+import { getBatchHistory } from "../services/ParameterService";
+import type { WorkflowTrackerResponse } from "../services/ParameterService";
 import type { CommodityDetail } from "../models/CommodityDetail";
 import type { DropdownOption } from "../models/DropdownOption";
 import type { FilterState } from "../models/FilterState";
@@ -94,12 +96,16 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const [cachedDisplayValue, setCachedDisplayValue] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const selectedOption = options.find((opt) => opt.code === value);
+  const safeOptions = Array.isArray(options) ? options : [];
+
+  const selectedOption = safeOptions.find(
+    (opt) => String(opt?.code ?? "") === String(value ?? "")
+  );
   
   // Update cached display value when we find a matching option
   useEffect(() => {
     if (selectedOption) {
-      setCachedDisplayValue(selectedOption.name);
+      setCachedDisplayValue(String(selectedOption.name ?? ""));
     } else if (!value) {
       // Clear cache only when value is explicitly cleared
       setCachedDisplayValue("");
@@ -107,7 +113,11 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   }, [selectedOption, value]);
   
   // Use cached value if option not found but value exists, otherwise use current option name
-  const displayValue = selectedOption ? selectedOption.name : (value ? cachedDisplayValue : "");
+  const displayValue = selectedOption
+    ? String(selectedOption.name ?? "")
+    : value
+      ? cachedDisplayValue
+      : "";
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -123,17 +133,22 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredOptions = options.filter(
-    (opt) =>
-      opt.name.toLowerCase().includes(search.toLowerCase()) ||
-      opt.code.toLowerCase().includes(search.toLowerCase()),
-  );
+  const normalizedSearch = String(search ?? "").trim().toLowerCase();
+
+  const filteredOptions = safeOptions.filter((opt) => {
+    const name = String(opt?.name ?? "").trim().toLowerCase();
+    const code = String(opt?.code ?? "").trim().toLowerCase();
+
+    return name.includes(normalizedSearch) || code.includes(normalizedSearch);
+  });
 
   const handleSelect = (code: string) => {
     // Cache the display name immediately before onChange triggers data fetch
-    const selected = options.find(opt => opt.code === code);
+    const selected = safeOptions.find(
+      (opt) => String(opt?.code ?? "") === String(code ?? "")
+    );
     if (selected) {
-      setCachedDisplayValue(selected.name);
+      setCachedDisplayValue(String(selected.name ?? ""));
     }
     onChange(code);
     setIsOpen(false);
@@ -216,13 +231,15 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
             ) : (
               filteredOptions.map((option) => (
                 <div
-                  key={option.code}
-                  onClick={() => handleSelect(option.code)}
+                  key={`${String(option?.code ?? "")}-${String(option?.name ?? "")}`}
+                  onClick={() => handleSelect(String(option?.code ?? ""))}
                   className="px-4 py-2.5 text-sm hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 cursor-pointer transition-all duration-200 text-gray-700 hover:text-emerald-700 border-b border-gray-50 last:border-0 flex items-center justify-between"
                 >
-                  <span className="font-medium">{option.name}</span>
+                  <span className="font-medium">
+                    {String(option?.name ?? "") || "(Unnamed)"}
+                  </span>
                   <span className="text-xs text-gray-400 font-mono">
-                    {option.code}
+                    {String(option?.code ?? "")}
                   </span>
                 </div>
               ))
@@ -236,7 +253,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
 export default function MasterViewer({ onBack }: MasterViewerProps) {
   // Tab state
-  const [activeTab, setActiveTab] = useState<"master" | "logs">("master");
+  const [activeTab, setActiveTab] = useState<"master" | "batchHistory" | "logs">("master");
 
   // Master Viewer States
   const [filters, setFilters] = useState<FilterState>({
@@ -271,6 +288,14 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
   const [logsPage, setLogsPage] = useState(1);
   const [logsRegNoFilter, setLogsRegNoFilter] = useState("");
   const logsPageSize = 20;
+
+  // Batch History States - visible read-only to every logged-in role
+  const [batchHistory, setBatchHistory] = useState<WorkflowTrackerResponse[]>([]);
+  const [batchHistoryLoading, setBatchHistoryLoading] = useState(false);
+  const [batchHistoryError, setBatchHistoryError] = useState<string | null>(null);
+  const [batchHistorySearch, setBatchHistorySearch] = useState("");
+  const [batchHistoryPage, setBatchHistoryPage] = useState(1);
+  const batchHistoryPageSize = 20;
 
   const tableTopRef = useRef<HTMLDivElement>(null);
 
@@ -323,6 +348,12 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
     }
   }, [logsPage, logsRegNoFilter, activeTab]);
 
+  useEffect(() => {
+    if (activeTab === "batchHistory") {
+      loadBatchHistory();
+    }
+  }, [batchHistoryPage, activeTab]);
+
   const loadCommodityData = async () => {
     setIsLoading(true);
     setError(null);
@@ -373,6 +404,40 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
     } finally {
       setLogsLoading(false);
     }
+  };
+
+  const loadBatchHistory = async () => {
+    setBatchHistoryLoading(true);
+    setBatchHistoryError(null);
+
+    try {
+      const response = await getBatchHistory(
+        batchHistorySearch.trim(),
+        batchHistoryPage,
+        batchHistoryPageSize
+      );
+      setBatchHistory(response);
+    } catch (err) {
+      console.error("Error loading batch history:", err);
+      setBatchHistoryError("Failed to load batch history. Please try again.");
+      setBatchHistory([]);
+    } finally {
+      setBatchHistoryLoading(false);
+    }
+  };
+
+  const handleBatchHistorySearch = () => {
+    if (batchHistoryPage !== 1) {
+      setBatchHistoryPage(1);
+    } else {
+      loadBatchHistory();
+    }
+  };
+
+  const formatBatchDate = (value?: string | null) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
   };
 
   // Helper function to check if any filter is selected
@@ -641,7 +706,7 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
                       Master Data and Logs Viewer
                     </h2>
                     <p className="text-emerald-100 text-sm">
-                      Browse and manage commodity master data and audit logs
+                      Browse master data, complete batch workflow history and audit logs
                     </p>
                   </div>
                 </div>
@@ -664,6 +729,22 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
                     Master Data
                   </div>
                   {activeTab === "master" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab("batchHistory")}
+                  className={`relative px-6 py-4 font-semibold text-sm transition-all duration-300 ${
+                    activeTab === "batchHistory"
+                      ? "text-emerald-600"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Package className="w-4 h-4" />
+                    Batch History
+                  </div>
+                  {activeTab === "batchHistory" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
                   )}
                 </button>
@@ -1079,6 +1160,101 @@ export default function MasterViewer({ onBack }: MasterViewerProps) {
               )}
             </div>
           </>
+        )}
+
+        {/* Batch History Tab Content - read-only for every role */}
+        {activeTab === "batchHistory" && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Batch Workflow History</h2>
+                  <p className="text-sm text-slate-500 mt-1">Read-only history of every parameter batch across Quotation, Lab, Reviewer and Admin.</p>
+                </div>
+                <div className="flex gap-2 w-full lg:w-auto">
+                  <div className="relative flex-1 lg:w-80">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      value={batchHistorySearch}
+                      onChange={(e) => setBatchHistorySearch(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleBatchHistorySearch()}
+                      placeholder="Search Batch ID or file name"
+                      className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <button onClick={handleBatchHistorySearch} className="px-5 py-2.5 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700">Search</button>
+                  <button onClick={loadBatchHistory} className="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50">Refresh</button>
+                </div>
+              </div>
+            </div>
+
+            {batchHistoryError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4">{batchHistoryError}</div>
+            )}
+
+            {batchHistoryLoading ? (
+              <div className="bg-white rounded-xl border border-slate-200 py-24 flex flex-col items-center">
+                <Loader2 className="w-9 h-9 animate-spin text-emerald-600 mb-3" />
+                <span className="text-slate-600 font-medium">Loading batch history...</span>
+              </div>
+            ) : batchHistory.length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-200 py-24 flex flex-col items-center">
+                <History className="w-10 h-10 text-slate-400 mb-3" />
+                <span className="text-slate-700 font-semibold">No batch history found</span>
+              </div>
+            ) : (
+              <>
+                {batchHistory.map((batch) => (
+                  <div key={batch.batchId} className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+                    <div className="px-6 py-5 bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
+                      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg font-bold text-slate-900">Batch {batch.batchId}</span>
+                            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">{batch.currentStage || "-"}</span>
+                            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">{batch.workflowStatus || "-"}</span>
+                          </div>
+                          <p className="text-sm text-slate-600 mt-2">{batch.fileName || "File name unavailable"}</p>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-2 text-sm">
+                          <div><span className="text-slate-400 block text-xs">Uploaded By</span><b className="text-slate-700">{batch.uploadedBy || "-"}</b></div>
+                          <div><span className="text-slate-400 block text-xs">Rows</span><b className="text-slate-700">{batch.totalRows ?? "-"}</b></div>
+                          <div><span className="text-slate-400 block text-xs">Last Action By</span><b className="text-slate-700">{batch.lastActionBy || "-"}</b></div>
+                          <div><span className="text-slate-400 block text-xs">Last Action</span><b className="text-slate-700">{formatBatchDate(batch.lastActionAt)}</b></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-6 overflow-x-auto">
+                      <div className="min-w-[760px] flex items-start">
+                        {(batch.history || []).map((item, index) => (
+                          <div key={`${batch.batchId}-${index}`} className="flex flex-1 items-start">
+                            <div className="min-w-[150px] text-center">
+                              <div className={`mx-auto w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm ${item.status === "Completed" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                                {index + 1}
+                              </div>
+                              <div className="mt-2 font-bold text-sm text-slate-800">{item.stage}</div>
+                              <div className="text-xs text-slate-500 mt-1">{item.change || item.status}</div>
+                              <div className="text-xs font-medium text-slate-600 mt-1">{item.userName || item.userId || "-"}</div>
+                              <div className="text-[11px] text-slate-400 mt-1">{formatBatchDate(item.actionAt)}</div>
+                              {item.remarks && <div className="text-[11px] text-slate-500 mt-2 max-w-[170px] mx-auto">{item.remarks}</div>}
+                            </div>
+                            {index < batch.history.length - 1 && <div className="h-0.5 bg-slate-200 flex-1 mt-[18px] min-w-8" />}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="flex items-center justify-between bg-white rounded-xl border border-slate-200 px-5 py-4">
+                  <button disabled={batchHistoryPage === 1} onClick={() => setBatchHistoryPage((p) => Math.max(1, p - 1))} className="px-4 py-2 rounded-lg border border-slate-300 disabled:opacity-40">Previous</button>
+                  <span className="text-sm font-semibold text-slate-600">Page {batchHistoryPage}</span>
+                  <button disabled={batchHistory.length < batchHistoryPageSize} onClick={() => setBatchHistoryPage((p) => p + 1)} className="px-4 py-2 rounded-lg border border-slate-300 disabled:opacity-40">Next</button>
+                </div>
+              </>
+            )}
+          </div>
         )}
 
         {/* Audit Logs Tab Content */}

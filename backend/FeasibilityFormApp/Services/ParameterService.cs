@@ -625,6 +625,32 @@ namespace FeasibilityFormApp.Services
 
 
         // ============================================================
+        // ALL BATCH HISTORY - READ ONLY / AVAILABLE TO EVERY USER
+        // ============================================================
+        public async Task<IEnumerable<WorkflowTrackerResponse>> GetBatchHistoryAsync(
+            string? searchTerm = null,
+            int pageNumber = 1,
+            int pageSize = 50
+        )
+        {
+            if (pageNumber < 1)
+                pageNumber = 1;
+
+            if (pageSize < 1)
+                pageSize = 50;
+
+            if (pageSize > 200)
+                pageSize = 200;
+
+            return await _parameterRepository.GetBatchHistoryAsync(
+                searchTerm,
+                pageNumber,
+                pageSize
+            );
+        }
+
+
+        // ============================================================
         // SUBMIT QUOTATION BATCH TO LAB
         // ============================================================
         public async Task<ParameterUploadResponse> SubmitToLabAsync(

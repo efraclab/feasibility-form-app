@@ -3889,6 +3889,64 @@ VALUES
 
 
         // ============================================================
+        // ALL BATCH HISTORY - READ ONLY / AVAILABLE TO EVERY USER
+        // ============================================================
+        public async Task<IEnumerable<WorkflowTrackerResponse>> GetBatchHistoryAsync(
+            string? searchTerm = null,
+            int pageNumber = 1,
+            int pageSize = 50
+        )
+        {
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            var offset = (pageNumber - 1) * pageSize;
+            var normalizedSearch = searchTerm?.Trim();
+
+            var batchIds = (await connection.QueryAsync<long>(
+                @"
+SELECT BatchId
+FROM
+(
+    SELECT
+        BatchId,
+        MAX(Id) AS LatestId,
+        MAX(FileName) AS FileName,
+        MAX(UploadedBy) AS UploadedBy
+    FROM ParameterUploadBufferLog
+    GROUP BY BatchId
+) B
+WHERE
+    @SearchTerm IS NULL
+    OR @SearchTerm = ''
+    OR CAST(BatchId AS VARCHAR(30)) LIKE '%' + @SearchTerm + '%'
+    OR ISNULL(FileName, '') LIKE '%' + @SearchTerm + '%'
+    OR ISNULL(UploadedBy, '') LIKE '%' + @SearchTerm + '%'
+ORDER BY LatestId DESC
+OFFSET @Offset ROWS
+FETCH NEXT @PageSize ROWS ONLY;",
+                new
+                {
+                    SearchTerm = normalizedSearch,
+                    Offset = offset,
+                    PageSize = pageSize
+                }
+            )).ToList();
+
+            var result = new List<WorkflowTrackerResponse>();
+
+            foreach (var id in batchIds)
+            {
+                var tracker = await GetWorkflowTrackerAsync(id);
+                if (tracker != null)
+                    result.Add(tracker);
+            }
+
+            return result;
+        }
+
+
+        // ============================================================
         // WORKFLOW TRACKER
         // ============================================================
         public async Task<WorkflowTrackerResponse?> GetWorkflowTrackerAsync(
@@ -3908,6 +3966,10 @@ VALUES
                 @"
 SELECT TOP 1
     BatchId,
+    FileName,
+    TotalRows,
+    SuccessfulRows,
+    FailedRows,
     UploadedBy,
     UploadedAt,
     CurrentStage,
@@ -3939,7 +4001,9 @@ WHERE USERWRPS = @BatchRef
       'Quotation Submit',
       'Lab Submit',
       'Reviewer Submit',
-      'Master Upload'
+      'Master Upload',
+      'Master Revert',
+      'Admin Send Back'
   )
 ORDER BY USERDATE ASC;
 ",
@@ -4013,6 +4077,12 @@ WHERE USERLOGINID IN @UserIds;
             var response = new WorkflowTrackerResponse
             {
                 BatchId = batchId,
+                FileName = (string?)batch.FileName,
+                TotalRows = (int?)batch.TotalRows ?? 0,
+                SuccessfulRows = (int?)batch.SuccessfulRows ?? 0,
+                FailedRows = (int?)batch.FailedRows ?? 0,
+                UploadedBy = uploadedBy,
+                UploadedAt = (DateTime?)batch.UploadedAt,
                 CurrentStage = (string?)batch.CurrentStage,
                 WorkflowStatus = (string?)batch.WorkflowStatus,
                 LastActionBy = (string?)batch.LastActionBy,
@@ -4038,22 +4108,31 @@ WHERE USERLOGINID IN @UserIds;
                 var change = ((string?)row.ChangeName)?.Trim();
                 var actorId = ((string?)row.UserId)?.Trim();
 
-                string? completedStage = change switch
+                string? historyStage = change switch
                 {
                     "Quotation Submit" => "Quotation",
                     "Lab Submit" => "Lab",
                     "Reviewer Submit" => "Reviewer",
                     "Master Upload" => "Admin",
+                    "Master Revert" => "Admin",
+                    "Admin Send Back" => "Admin",
                     _ => null
                 };
 
-                if (completedStage == null)
+                if (historyStage == null)
                     continue;
+
+                var historyStatus = change switch
+                {
+                    "Master Revert" => "Reverted",
+                    "Admin Send Back" => "Sent Back",
+                    _ => "Completed"
+                };
 
                 response.History.Add(new WorkflowTrackerItem
                 {
-                    Stage = completedStage,
-                    Status = "Completed",
+                    Stage = historyStage,
+                    Status = historyStatus,
                     UserId = actorId,
                     UserName = ResolveName(actorId),
                     ActionAt = (DateTime?)row.UserDate,

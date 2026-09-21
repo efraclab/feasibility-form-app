@@ -48,6 +48,12 @@ namespace FeasibilityFormApp.Services
             long batchId
         );
 
+        Task<IEnumerable<WorkflowTrackerResponse>> GetBatchHistoryAsync(
+            string? searchTerm = null,
+            int pageNumber = 1,
+            int pageSize = 50
+        );
+
         Task<ParameterUploadResponse> SubmitToLabAsync(
             long batchId,
             string userId,
