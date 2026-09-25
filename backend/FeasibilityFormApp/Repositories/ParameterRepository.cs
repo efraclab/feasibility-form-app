@@ -3099,6 +3099,10 @@ INSERT INTO OHEADMST
 
     HeadDepartment,
 
+    headintype,
+
+    headoutype,
+
     UploadDate,
 
     Visibility,
@@ -3142,6 +3146,10 @@ VALUES
     @ParameterGroupCode,
 
     @LabCode,
+
+    'D',
+
+    'D',
 
     GETDATE(),
 
@@ -3562,6 +3570,8 @@ INSERT INTO CATAGORY_PARAMETER
 
     SpecificationCode,
 
+    CommodityParameterN,
+
     Sp_Code,
 
     CommodityLabDistCode,
@@ -3613,6 +3623,8 @@ VALUES
     @MethodCode,
 
     @SpecificationCode,
+
+    @CommodityParameterN,
 
     @SpecificationCode,
 
@@ -3672,6 +3684,13 @@ VALUES
                     param.MethodCode,
 
                     param.SpecificationCode,
+
+                    CommodityParameterN =
+                        string.IsNullOrWhiteSpace(
+                            param.NonFssaiFssaiDrugCode
+                        )
+                            ? null
+                            : param.NonFssaiFssaiDrugCode.Trim(),
 
                     param.LabCode,
 
