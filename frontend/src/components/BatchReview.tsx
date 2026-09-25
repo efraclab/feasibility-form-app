@@ -3091,12 +3091,10 @@ export default function BatchReview({
   // REVIEWER TEMPLATE DOWNLOAD
   // Available to Reviewer after Admin final upload is completed.
   //
-  // Intentionally NOT mapped yet:
-  // - NON FSSAI/FSSAI/DRUG CODE
-  // - REGULATION CODE
-  // NON FSSAI/FSSAI/DRUG is mapped to FSSAI.
-  // REGULATION NAME is mapped to IS 10500 : 2012.
-  // Other regulation-specific columns remain blank for now.
+  // Regulation-specific mapping:
+  // REGULATION NAME is matched against the reviewer template column headers.
+  // Only the matching regulation column receives "YES".
+  // All other regulation-specific columns remain blank.
   // ============================================================
   const REVIEWER_TEMPLATE_HEADERS = [
     "DATABASE TYPE",
@@ -3277,8 +3275,33 @@ export default function BatchReview({
       row[27] = param.fssaiCategoryNo ?? "";
       row[28] = param.subClause ?? "";
 
-      // Current template NON FSSAI/FSSAI/DRUG -> Reviewer FSSAI
-      row[30] = param.nonFssaiFssaiDrug ?? "";
+      // DATABASE TYPE / DEPARTMENT CODE
+      row[0] = param.nonFssaiFssaiDrug ?? "";
+      row[1] = param.nonFssaiFssaiDrugCode ?? "";
+
+      // Regulation Name controls the Reviewer template YES column.
+      // GENERAL -> GENERAL PARAMETER = YES
+      // Any other Regulation Name is matched against the regulation-specific
+      // template headers, and only that matching column gets YES.
+      const regulationName = String(param.regulationName ?? "")
+        .trim()
+        .toLowerCase();
+
+      if (regulationName === "general") {
+        // GENERAL PARAMETER
+        row[29] = "YES";
+      } else if (regulationName) {
+        const regulationColumnIndex = REVIEWER_TEMPLATE_HEADERS.findIndex(
+          (header, headerIndex) =>
+            headerIndex >= 58 &&
+            headerIndex <= 120 &&
+            String(header).trim().toLowerCase() === regulationName
+        );
+
+        if (regulationColumnIndex >= 0) {
+          row[regulationColumnIndex] = "YES";
+        }
+      }
 
       row[33] = param.methodName ?? "";
       row[34] = param.methodCode ?? "";
@@ -3294,10 +3317,11 @@ export default function BatchReview({
       row[56] = param.detectorMode ?? "";
       row[57] = param.detector ?? "";
 
-      // Current template REGULATION NAME -> Reviewer IS 10500 : 2012
-      row[58] = param.regulationName ?? "";
+      // Regulation Name itself is not copied into a regulation-specific
+      // column. It is used only to set YES in the matching column above.
 
-      // Remaining regulation-specific columns intentionally blank for now.
+      // Remaining regulation-specific columns stay blank unless their header
+      // exactly matches the Regulation Name.
       // DO:DQ extra Reviewer-only columns intentionally blank for now.
       row[121] = param.parameterIndividualRate ?? "";
       row[122] = param.regulatoryRateDrug ?? "";
