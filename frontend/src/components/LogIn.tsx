@@ -258,8 +258,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               </div>
               <div className="text-left">
                 <h1 className="text-2xl lg:text-3xl font-bold text-white leading-tight">
-                  Feasibility Worksheet
-                </h1>
+                  Parameter Uploader                </h1>
                 <p className="text-emerald-100 text-sm font-medium mt-1">
                   Sample Analysis Management
                 </p>

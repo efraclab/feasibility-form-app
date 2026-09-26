@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FeasibilityFormApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9ddce234f2b9be98c6ca4bbb9b1198792b4088cc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a020b340e96026dfbf09c3671b1a607eac8d1e76")]
 [assembly: System.Reflection.AssemblyProductAttribute("FeasibilityFormApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FeasibilityFormApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

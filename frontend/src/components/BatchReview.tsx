@@ -399,61 +399,11 @@ const AUTO_FILLED_FIELDS = new Set<string>([
   "nonFssaiFssaiDrug",
 ]);
 
-// Fields rendered as number inputs must be sent to the API as numbers or null.
-// HTML inputs return strings, and an empty number input returns "".
-// The backend cannot convert "" to Nullable<int>, so "" is converted to null.
-const NUMERIC_PARAMETER_FIELDS = new Set<string>([
-  "tatDays",
-  "parameterSequence",
-  "sampleQuantityAnalysis",
-  "sampleQuantityRetention",
-  "loq",
-  "parameterIndividualRate",
-  "regulatoryRateDrug",
-]);
-
-const normalizeParameterForApi = (param: ParameterData): ParameterData => {
-  const normalized = { ...param } as ParameterData & Record<string, unknown>;
-
-  NUMERIC_PARAMETER_FIELDS.forEach((field) => {
-    const value = normalized[field];
-
-    if (value === "" || value === null || value === undefined) {
-      normalized[field] = null;
-      return;
-    }
-
-    if (typeof value === "string") {
-      const trimmed = value.trim();
-
-      if (trimmed === "") {
-        normalized[field] = null;
-        return;
-      }
-
-      const numericValue = Number(trimmed);
-
-      // Do not send NaN to the API. Keep the original value so normal
-      // validation/API handling can report it instead of silently changing it.
-      if (!Number.isNaN(numericValue)) {
-        normalized[field] = numericValue;
-      }
-    }
-  });
-
-  return normalized as ParameterData;
-};
-
-const normalizeParametersForApi = (
-  parameters: ParameterData[]
-): ParameterData[] => {
-  return parameters.map(normalizeParameterForApi);
-};
-
 // Quotation users can edit only these six business fields.
 // Commodity/Lab/Regulation codes are filled automatically from the selected name.
 const QUOTATION_EDITABLE_FIELDS = new Set<string>([
   "commodityName",
+  "commodityGroup",
   "parameterName",
   "parameterLabDistribution",
   "regulationName",
@@ -487,7 +437,6 @@ const REVIEWER_ADMIN_EDITABLE_FIELDS = new Set<string>([
   "sampleQuantityAnalysis",
   "sampleQuantityRetention",
   "requiredSampleQuantityUnit",
-  "unitCode",
   "nablScopeStatus",
   "methodName",
   "methodCode",
@@ -546,6 +495,10 @@ const LAB_NAME_DROPDOWNS = {
     optionsKey: "testCodes",
     codeField: "testCode",
   },
+  requiredSampleQuantityUnit: {
+    optionsKey: "unitCodes",
+    codeField: "unitCode",
+  },
 } as const;
 
 type LabNameDropdownField = keyof typeof LAB_NAME_DROPDOWNS;
@@ -583,6 +536,10 @@ const QUOTATION_NAME_DROPDOWNS = {
   commodityName: {
     optionsKey: "commodityCodes",
     codeField: "commodityCode",
+  },
+  commodityGroup: {
+    optionsKey: "commodityGroupCodes",
+    codeField: "commodityGroupCode",
   },
   parameterLabDistribution: {
     optionsKey: "labCodes",
@@ -1478,17 +1435,14 @@ export default function BatchReview({
           );
 
 
-        const normalizedFiltered =
-          normalizeParametersForApi(filtered);
-
         setBatchData(
-          normalizedFiltered
+          filtered
         );
 
         setEditedData(
           JSON.parse(
             JSON.stringify(
-              normalizedFiltered
+              filtered
             )
           )
         );
@@ -2082,6 +2036,14 @@ export default function BatchReview({
         errors.push(`Row ${row}: Commodity Name is required.`);
       }
 
+      if (!String(param.commodityGroup ?? "").trim()) {
+        errors.push(`Row ${row}: Commodity Group is required.`);
+      }
+
+      if (!String(param.commodityGroupCode ?? "").trim()) {
+        errors.push(`Row ${row}: Commodity Group Code could not be determined. Please select a valid Commodity Group.`);
+      }
+
       if (!String(param.parameterLabDistribution ?? "").trim()) {
         errors.push(`Row ${row}: Lab Name is required.`);
       }
@@ -2350,12 +2312,10 @@ export default function BatchReview({
                 ParameterUpdateRequest =
               {
                 parameters:
-                  normalizeParametersForApi(
-                    updatedParams.filter(
-                      (p) =>
-                        p.status ===
-                        "Pending"
-                    )
+                  updatedParams.filter(
+                    (p) =>
+                      p.status ===
+                      "Pending"
                   ),
                 updatedBy:
                   employeeId,
@@ -2428,9 +2388,7 @@ export default function BatchReview({
               ParameterUpdateRequest =
             {
               parameters:
-                normalizeParametersForApi(
-                  editedData
-                ),
+                editedData,
 
               updatedBy:
                 employeeId,
@@ -2609,9 +2567,7 @@ export default function BatchReview({
               ParameterUpdateRequest =
             {
               parameters:
-                normalizeParametersForApi(
-                  selectedParams
-                ),
+                selectedParams,
 
               reviewedBy:
                 employeeId,
@@ -2708,9 +2664,7 @@ export default function BatchReview({
           ParameterUpdateRequest =
         {
           parameters:
-            normalizeParametersForApi(
-              selectedParams
-            ),
+            selectedParams,
 
           reviewedBy:
             employeeId,
@@ -2802,9 +2756,7 @@ export default function BatchReview({
               ParameterUpdateRequest =
             {
               parameters:
-                normalizeParametersForApi(
-                  selectedParams
-                ),
+                selectedParams,
 
               updatedBy:
                 employeeId,
@@ -3712,9 +3664,10 @@ export default function BatchReview({
       // ------------------------------------------------------------
       // COMMON SEARCHABLE MASTER DROPDOWNS - ALL USERS
       //
-      // Commodity Name  -> CatagoryName / CatagoryCode
-      // Regulation Name -> RegulationName / RegulationCode
-      // Lab Name        -> CODEDESC / CODECD (CODETYPE = 'DM')
+      // Commodity Name       -> CatagoryName / CatagoryCode
+      // Commodity Group      -> CommodityGroupName / CommodityGroupCode
+      // Regulation Name      -> RegulationName / RegulationCode
+      // Lab Name             -> CODEDESC / CODECD (CODETYPE = 'DM')
       //
       // This runs before the role-specific branches so Quotation,
       // Lab, Reviewer and Admin all get the same searchable dropdown.
@@ -3958,8 +3911,8 @@ export default function BatchReview({
       // ------------------------------------------------------------
       // LAB MODE
       // Searchable master fields are handled above.
-      // Required Sample Quantity Unit is a normal input.
-      // Paired code columns are auto-filled/read-only above.
+      // Required Sample Quantity Unit is selected from the unit master.
+      // Selecting the unit automatically fills Unit Code.
       // ------------------------------------------------------------
       if (isLab()) {
         const labEditable = LAB_EDITABLE_FIELDS.has(keyName);
@@ -4003,9 +3956,30 @@ export default function BatchReview({
 
 
       // ------------------------------------------------------------
+      // UNIT CODE - AUTO FILLED FROM REQUIRED SAMPLE QUANTITY UNIT
+      // Reviewer/Admin can select the unit name, but Unit Code must
+      // always come from the selected unit and remain read-only.
+      // ------------------------------------------------------------
+      if (
+        keyName === "unitCode" &&
+        (isReviewer() || isAdmin())
+      ) {
+        return (
+          <input
+            type="text"
+            value={String(param[key] ?? "")}
+            readOnly
+            className="min-w-[170px] w-full px-2 py-1 text-sm outline-none border rounded-md bg-slate-100 text-slate-600 border-slate-200 cursor-not-allowed"
+          />
+        );
+      }
+
+
+      // ------------------------------------------------------------
       // REVIEWER / ADMIN - FULL EDIT ACCESS
       // Searchable name fields are handled above. Paired code columns
       // are intentionally editable for Reviewer and Admin.
+      // Unit Code is excluded because it is auto-filled from the unit.
       // ------------------------------------------------------------
       if (
         (isReviewer() || isAdmin()) &&
