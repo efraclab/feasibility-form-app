@@ -399,6 +399,57 @@ const AUTO_FILLED_FIELDS = new Set<string>([
   "nonFssaiFssaiDrug",
 ]);
 
+// Fields rendered as number inputs must be sent to the API as numbers or null.
+// HTML inputs return strings, and an empty number input returns "".
+// The backend cannot convert "" to Nullable<int>, so "" is converted to null.
+const NUMERIC_PARAMETER_FIELDS = new Set<string>([
+  "tatDays",
+  "parameterSequence",
+  "sampleQuantityAnalysis",
+  "sampleQuantityRetention",
+  "loq",
+  "parameterIndividualRate",
+  "regulatoryRateDrug",
+]);
+
+const normalizeParameterForApi = (param: ParameterData): ParameterData => {
+  const normalized = { ...param } as ParameterData & Record<string, unknown>;
+
+  NUMERIC_PARAMETER_FIELDS.forEach((field) => {
+    const value = normalized[field];
+
+    if (value === "" || value === null || value === undefined) {
+      normalized[field] = null;
+      return;
+    }
+
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+
+      if (trimmed === "") {
+        normalized[field] = null;
+        return;
+      }
+
+      const numericValue = Number(trimmed);
+
+      // Do not send NaN to the API. Keep the original value so normal
+      // validation/API handling can report it instead of silently changing it.
+      if (!Number.isNaN(numericValue)) {
+        normalized[field] = numericValue;
+      }
+    }
+  });
+
+  return normalized as ParameterData;
+};
+
+const normalizeParametersForApi = (
+  parameters: ParameterData[]
+): ParameterData[] => {
+  return parameters.map(normalizeParameterForApi);
+};
+
 // Quotation users can edit only these six business fields.
 // Commodity/Lab/Regulation codes are filled automatically from the selected name.
 const QUOTATION_EDITABLE_FIELDS = new Set<string>([
@@ -1427,14 +1478,17 @@ export default function BatchReview({
           );
 
 
+        const normalizedFiltered =
+          normalizeParametersForApi(filtered);
+
         setBatchData(
-          filtered
+          normalizedFiltered
         );
 
         setEditedData(
           JSON.parse(
             JSON.stringify(
-              filtered
+              normalizedFiltered
             )
           )
         );
@@ -2296,10 +2350,12 @@ export default function BatchReview({
                 ParameterUpdateRequest =
               {
                 parameters:
-                  updatedParams.filter(
-                    (p) =>
-                      p.status ===
-                      "Pending"
+                  normalizeParametersForApi(
+                    updatedParams.filter(
+                      (p) =>
+                        p.status ===
+                        "Pending"
+                    )
                   ),
                 updatedBy:
                   employeeId,
@@ -2372,7 +2428,9 @@ export default function BatchReview({
               ParameterUpdateRequest =
             {
               parameters:
-                editedData,
+                normalizeParametersForApi(
+                  editedData
+                ),
 
               updatedBy:
                 employeeId,
@@ -2551,7 +2609,9 @@ export default function BatchReview({
               ParameterUpdateRequest =
             {
               parameters:
-                selectedParams,
+                normalizeParametersForApi(
+                  selectedParams
+                ),
 
               reviewedBy:
                 employeeId,
@@ -2648,7 +2708,9 @@ export default function BatchReview({
           ParameterUpdateRequest =
         {
           parameters:
-            selectedParams,
+            normalizeParametersForApi(
+              selectedParams
+            ),
 
           reviewedBy:
             employeeId,
@@ -2740,7 +2802,9 @@ export default function BatchReview({
               ParameterUpdateRequest =
             {
               parameters:
-                selectedParams,
+                normalizeParametersForApi(
+                  selectedParams
+                ),
 
               updatedBy:
                 employeeId,
