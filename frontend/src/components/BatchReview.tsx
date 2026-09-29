@@ -407,9 +407,40 @@ const QUOTATION_EDITABLE_FIELDS = new Set<string>([
   "parameterName",
   "parameterLabDistribution",
   "regulationName",
+  "outsourceYN",
   "parameterIndividualRate",
   "regulatoryRateDrug",
 ]);
+
+// Fields the Quotation team MUST fill (highlighted yellow) before the batch
+// can be forwarded to Lab. Parameter Individual Rate / Regulatory Rate Drug
+// are additionally mandatory only for Drug rows (see isDrugParameter).
+const QUOTATION_MANDATORY_FIELDS = new Set<string>([
+  "parameterName",
+  "commodityName",
+  "commodityGroup",
+  "regulationName",
+  "parameterLabDistribution", // Lab Name
+  "outsourceYN",
+]);
+
+// Owned by the Quotation team - Lab users see these as read-only.
+const LAB_LOCKED_FIELDS = new Set<string>([
+  "commodityName",
+  "regulationName",
+  "parameterLabDistribution", // Lab Name
+]);
+
+// A row is a "Drug" row when Regulation Name is Drug. The older
+// Non FSSAI/FSSAI/Drug based detection is kept so existing behaviour
+// is not disturbed.
+const isDrugParameter = (param: ParameterData): boolean => {
+  const regulation = String(param.regulationName ?? "").trim().toUpperCase();
+  const drugCode = String(param.nonFssaiFssaiDrugCode ?? "").trim().toUpperCase();
+  const drugName = String(param.nonFssaiFssaiDrug ?? "").trim().toUpperCase();
+
+  return regulation === "DRUG" || drugCode === "003" || drugName === "DRUG";
+};
 
 // Lab users (ROLE000006 / ROLE000007) edit the NAME/value side.
 // The paired CODE is filled automatically from the selected master value.
@@ -457,6 +488,7 @@ const REVIEWER_ADMIN_EDITABLE_FIELDS = new Set<string>([
 const LAB_EDITABLE_FIELDS = new Set<string>([
   "parameterGroup",
   "parameterSubGroup",
+  "tatDays",
   "methodName",
   "specificationName",
   "testUnit",
@@ -516,6 +548,9 @@ const LAB_AUTO_CODE_FIELDS = new Set<string>([
 const LAB_MANDATORY_FIELDS = new Set<string>([
   "parameterGroup",
   "parameterGroupCode",
+  "parameterSubGroup",
+  "parameterSubGroupCode",
+  "tatDays",
   "methodName",
   "specificationName",
   "testUnit",
@@ -2069,6 +2104,46 @@ export default function BatchReview({
   };
 
 
+  // Full mandatory check used before the batch is forwarded to Lab.
+  // (Saving keeps using validateQuotationRows, so drafts are not disturbed.)
+  const getQuotationMandatoryErrors = (): string[] => {
+    const errors: string[] = [];
+
+    const isBlank = (value: unknown) =>
+      value === null ||
+      value === undefined ||
+      String(value).trim() === "";
+
+    editedData.forEach((row, index) => {
+      const rowNo = index + 1;
+
+      const required: Array<{ label: string; value: unknown }> = [
+        { label: "Parameter Name", value: row.parameterName },
+        { label: "Commodity Name", value: row.commodityName },
+        { label: "Commodity Group", value: row.commodityGroup },
+        { label: "Regulation Name", value: row.regulationName },
+        { label: "Lab Name", value: row.parameterLabDistribution },
+        { label: "Outsource Y/N", value: row.outsourceYN },
+      ];
+
+      if (isDrugParameter(row)) {
+        required.push(
+          { label: "Parameter Individual Rate", value: row.parameterIndividualRate },
+          { label: "Regulatory Rate Drug", value: row.regulatoryRateDrug }
+        );
+      }
+
+      required.forEach(({ label, value }) => {
+        if (isBlank(value)) {
+          errors.push(`Row ${rowNo}: ${label} is required`);
+        }
+      });
+    });
+
+    return errors;
+  };
+
+
   const handleEditMode =
     () => {
       setIsEditMode(true);
@@ -2828,6 +2903,21 @@ export default function BatchReview({
         return;
       }
 
+      const quotationErrors = getQuotationMandatoryErrors();
+
+      if (quotationErrors.length > 0) {
+        showToast(
+          "warning",
+          `Please complete all mandatory Quotation fields. ${quotationErrors
+            .slice(0, 3)
+            .join("; ")}${quotationErrors.length > 3
+              ? `; +${quotationErrors.length - 3} more`
+              : ""
+          }`
+        );
+        return;
+      }
+
       openConfirmDialog(
         "submitLab",
         async () => {
@@ -2895,6 +2985,9 @@ export default function BatchReview({
       }> = [
           { label: "Parameter Group", value: row.parameterGroup },
           { label: "Parameter Group Code", value: row.parameterGroupCode },
+          { label: "Parameter Sub-Group", value: row.parameterSubGroup },
+          { label: "Parameter Sub-Group Code", value: row.parameterSubGroupCode },
+          { label: "TAT Days", value: row.tatDays },
           { label: "Method Name", value: row.methodName },
           { label: "Specification Name", value: row.specificationName },
           { label: "Test Unit", value: row.testUnit },
@@ -3673,6 +3766,18 @@ export default function BatchReview({
       // Lab, Reviewer and Admin all get the same searchable dropdown.
       // ------------------------------------------------------------
       if (isQuotationNameDropdown(keyName)) {
+        // Lab users cannot change these - Quotation team fills them.
+        if (isLab() && LAB_LOCKED_FIELDS.has(keyName)) {
+          return (
+            <input
+              type="text"
+              value={String(param[key] ?? "")}
+              readOnly
+              className="min-w-[170px] w-full px-2 py-1 text-sm outline-none border rounded-md bg-slate-100 text-slate-600 border-slate-200 cursor-not-allowed"
+            />
+          );
+        }
+
         const config = QUOTATION_NAME_DROPDOWNS[keyName];
         const options = dropdownOptions[config.optionsKey];
 
@@ -3770,13 +3875,36 @@ export default function BatchReview({
       // ------------------------------------------------------------
       if (isQuotation()) {
         const quotationEditable = QUOTATION_EDITABLE_FIELDS.has(keyName);
-        const drugCode = String(param.nonFssaiFssaiDrugCode ?? "").trim().toUpperCase();
-        const drugName = String(param.nonFssaiFssaiDrug ?? "").trim().toUpperCase();
-        const isDrugRow = drugCode === "003" || drugName === "DRUG";
         const isMandatoryQuotationRate =
-          isDrugRow &&
+          isDrugParameter(param) &&
           (keyName === "parameterIndividualRate" ||
             keyName === "regulatoryRateDrug");
+        const isMandatoryQuotationField =
+          QUOTATION_MANDATORY_FIELDS.has(keyName) || isMandatoryQuotationRate;
+
+        // Outsource Y/N - selectable Y / N (any legacy value is preserved)
+        if (keyName === "outsourceYN" && quotationEditable) {
+          const currentValue = String(param[key] ?? "");
+
+          return (
+            <select
+              value={currentValue}
+              onChange={(e) =>
+                handleCellEdit(originalIndex, key, e.target.value)
+              }
+              className="min-w-[170px] w-full px-2 py-1 text-sm outline-none border rounded-md transition-all bg-yellow-50 border-yellow-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
+            >
+              <option value="">Select Y/N</option>
+              <option value="Y">Y</option>
+              <option value="N">N</option>
+              {currentValue &&
+                currentValue !== "Y" &&
+                currentValue !== "N" && (
+                  <option value={currentValue}>{currentValue}</option>
+                )}
+            </select>
+          );
+        }
 
         return (
           <input
@@ -3801,7 +3929,7 @@ export default function BatchReview({
             className={`
               min-w-[170px] w-full px-2 py-1 text-sm outline-none border rounded-md transition-all
               ${quotationEditable
-                ? isMandatoryQuotationRate
+                ? isMandatoryQuotationField
                   ? "bg-yellow-50 border-yellow-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
                   : "bg-white border-slate-300 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                 : "bg-slate-100 text-slate-600 border-slate-200 cursor-not-allowed"
@@ -3920,14 +4048,16 @@ export default function BatchReview({
         return (
           <input
             type={
-              keyName === "loq" ||
+              keyName === "tatDays" ||
+                keyName === "loq" ||
                 keyName === "sampleQuantityAnalysis" ||
                 keyName === "sampleQuantityRetention"
                 ? "number"
                 : "text"
             }
             step={
-              keyName === "loq" ||
+              keyName === "tatDays" ||
+                keyName === "loq" ||
                 keyName === "sampleQuantityAnalysis" ||
                 keyName === "sampleQuantityRetention"
                 ? "any"
@@ -4273,6 +4403,12 @@ export default function BatchReview({
                         {
                           header.label
                         }
+                        {((isQuotation() &&
+                          QUOTATION_MANDATORY_FIELDS.has(header.key)) ||
+                          (isLab() &&
+                            LAB_MANDATORY_FIELDS.has(header.key))) && (
+                            <span className="text-red-500 ml-0.5">*</span>
+                          )}
                       </span>
                     </th>
                   )

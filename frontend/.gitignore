@@ -11,7 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
-
+feasibility-form-app\frontend.env
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
