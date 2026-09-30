@@ -708,6 +708,25 @@ export const submitToAdmin = async (
    CONVERT EXCEL ROW
 ===================================================== */
 
+/**
+ * Excel cells are read as strings, and an empty cell arrives as "".
+ * Backend numeric fields are nullable (int? / decimal?), and
+ * System.Text.Json cannot convert "" to a number. These helpers make
+ * sure blank cells are sent as null and numeric cells as real numbers.
+ */
+const toNullableString = (value: unknown): string | null => {
+  if (value === null || value === undefined) return null;
+  const text = String(value).trim();
+  return text === '' ? null : text;
+};
+
+const toNullableInt = (value: unknown): number | null => {
+  const text = toNullableString(value);
+  if (text === null) return null;
+  const num = Number(text.replace(/,/g, ''));
+  return Number.isFinite(num) ? Math.trunc(num) : null;
+};
+
 export const convertExcelRowToParameter = (
   row: Record<string, any>
 ): ParameterData => {
@@ -795,23 +814,23 @@ export const convertExcelRowToParameter = (
         .trim() || null,
 
     tatDays:
-      row['TAT DAYS'] ?? null,
+      toNullableInt(row['TAT DAYS']),
 
     parameterSequence:
-      row['PARAMETER SEQUENCE'] ?? null,
+      toNullableInt(row['PARAMETER SEQUENCE']),
 
     outsourceYN:
       row['OUTSOURCE Y/N'] || null,
 
     sampleQuantityAnalysis:
-      row[
-        'SAMPLE QUANTITY REQUIRED-FOR ANALYSIS'
-      ] ?? null,
+      toNullableInt(
+        row['SAMPLE QUANTITY REQUIRED-FOR ANALYSIS']
+      ),
 
     sampleQuantityRetention:
-      row[
-        'SAMPLE QUANTITY REQUIRED-FOR RETENTION'
-      ] ?? null,
+      toNullableInt(
+        row['SAMPLE QUANTITY REQUIRED-FOR RETENTION']
+      ),
 
     requiredSampleQuantityUnit:
       row[
@@ -863,7 +882,7 @@ export const convertExcelRowToParameter = (
       row['INSTRUMENT'] || null,
 
     loq:
-      row['LOQ'] ?? null,
+      toNullableString(row['LOQ']),
 
     detectorMode:
       row['DetectorMode']
