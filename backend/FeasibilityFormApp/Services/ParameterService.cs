@@ -7,14 +7,17 @@ namespace FeasibilityFormApp.Services
     {
         private readonly IParameterRepository _parameterRepository;
         private readonly ILogger<ParameterService> _logger;
+        private readonly IEmailNotificationService _emailNotifier;
 
         public ParameterService(
             IParameterRepository parameterRepository,
-            ILogger<ParameterService> logger
+            ILogger<ParameterService> logger,
+            IEmailNotificationService emailNotifier
         )
         {
             _parameterRepository = parameterRepository;
             _logger = logger;
+            _emailNotifier = emailNotifier;
         }
 
 
@@ -668,12 +671,22 @@ namespace FeasibilityFormApp.Services
 
             try
             {
-                return await _parameterRepository.SubmitToLabAsync(
+                var result = await _parameterRepository.SubmitToLabAsync(
                     batchId,
                     userId.Trim(),
                     userSystem,
                     remarks
                 );
+
+                // Reached only after the database transaction committed.
+                _emailNotifier.QueueBatchNotification(
+                    WorkflowEmailTarget.Lab,
+                    batchId,
+                    userId.Trim(),
+                    DateTime.Now
+                );
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -705,12 +718,22 @@ namespace FeasibilityFormApp.Services
 
             try
             {
-                return await _parameterRepository.SubmitToReviewerAsync(
+                var result = await _parameterRepository.SubmitToReviewerAsync(
                     batchId,
                     userId.Trim(),
                     userSystem,
                     remarks
                 );
+
+                // Reached only after the database transaction committed.
+                _emailNotifier.QueueBatchNotification(
+                    WorkflowEmailTarget.Reviewer,
+                    batchId,
+                    userId.Trim(),
+                    DateTime.Now
+                );
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -737,12 +760,22 @@ namespace FeasibilityFormApp.Services
             if (string.IsNullOrWhiteSpace(userId))
                 throw new ArgumentException("Reviewer user ID is required.");
 
-            return await _parameterRepository.SubmitToAdminAsync(
+            var result = await _parameterRepository.SubmitToAdminAsync(
                 batchId,
                 userId.Trim(),
                 userSystem,
                 remarks
             );
+
+            // Reached only after the database transaction committed.
+            _emailNotifier.QueueBatchNotification(
+                WorkflowEmailTarget.Admin,
+                batchId,
+                userId.Trim(),
+                DateTime.Now
+            );
+
+            return result;
         }
 
 

@@ -23,6 +23,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<JwtService>();
 
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("Email"));
+builder.Services.AddSingleton<IEmailNotificationService, EmailNotificationService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
