@@ -89,7 +89,7 @@ Parameter Upload Software: {appUrl}
 Regards,
 EFRAC Parameter Upload System";
 
-                var e = WebUtility.HtmlEncode;
+                static string e(string? value) => WebUtility.HtmlEncode(value) ?? string.Empty;
                 var htmlBody =
 $@"<div style=""font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#222;"">
 <p>Dear {e(target.ToString())} Team,</p>
